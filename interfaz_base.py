@@ -1,35 +1,27 @@
 import tkinter as tk
 from tkinter import messagebox
 import cv2
-from PIL import Image, ImageTk
-
-def crear_imagen_placeholder(ancho, alto, color, texto):
-    """Crea una imagen provisional de color sólido si no existen las imágenes reales."""
-    img = Image.new('RGB', (ancho, alto), color=color)
-    return ImageTk.PhotoImage(img)
 
 class SistemaEducativoApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Sistema Educativo Inteligente")
         self.geometry("950x750")
-        self.configure(bg="#E8F4F8") # Azul claro amigable para niños
+        self.configure(bg="#E8F4F8")
         
-        # Variables globales de la sesión
+        # Variables de sesión
         self.usuario_actual = ""
         self.nivel_actual = 1
         self.pregunta_actual = 1
         self.respuestas_correctas = 0
         
-        # Contenedor principal donde se apilarán las pantallas
+        # Contenedor principal
         self.container = tk.Frame(self, bg="#E8F4F8")
         self.container.pack(fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
         
         self.frames = {}
-        
-        # Agregada PantallaStats al ciclo de inicialización
         for F in (PantallaInicio, PantallaHome, PantallaModo, PantallaStats):
             page_name = F.__name__
             frame = F(parent=self.container, controller=self)
@@ -50,7 +42,6 @@ class SistemaEducativoApp(tk.Tk):
         frame.tkraise()
 
     def cerrar_sesion(self):
-        """Limpia los datos de sesión y regresa al login."""
         self.usuario_actual = ""
         self.mostrar_pantalla("PantallaInicio")
 
@@ -59,9 +50,11 @@ class PantallaInicio(tk.Frame):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
         
-        # Imagen decorativa (Placeholder)
-        self.img_deco = crear_imagen_placeholder(300, 200, "#FFD700", "Decoración")
-        tk.Label(self, image=self.img_deco, bg="#E8F4F8").pack(pady=40)
+        # Para usar una imagen real sin Pillow, usa:
+        # self.img_deco = tk.PhotoImage(file="tu_imagen.png")
+        # tk.Label(self, image=self.img_deco, bg="#E8F4F8").pack(pady=40)
+        
+        tk.Label(self, text="[Espacio para Imagen Decorativa .PNG]", bg="#FFD700", width=40, height=10).pack(pady=40)
         
         tk.Label(self, text="¡Aprende Jugando!", font=("Helvetica", 28, "bold"), bg="#E8F4F8", fg="#333333").pack(pady=10)
         tk.Label(self, text="Ingresa tu nombre para empezar:", font=("Helvetica", 14), bg="#E8F4F8").pack(pady=10)
@@ -87,7 +80,7 @@ class PantallaHome(tk.Frame):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
         
-        # Zona superior de controles (Solo cerrar sesión aquí por ser el menú principal)
+        # --- EL BOTÓN CERRAR SESIÓN AHORA SOLO EXISTE AQUÍ ---
         top_frame = tk.Frame(self, bg="#E8F4F8")
         top_frame.pack(fill="x", pady=10, padx=20)
         
@@ -99,23 +92,21 @@ class PantallaHome(tk.Frame):
         frame_botones = tk.Frame(self, bg="#E8F4F8")
         frame_botones.pack(expand=True)
         
-        # Botones de imagen interactivos
-        self.img_btn1 = crear_imagen_placeholder(200, 200, "#FF6B6B", "Modo 1")
-        self.img_btn2 = crear_imagen_placeholder(200, 200, "#4ECDC4", "Modo 2")
-        self.img_btn3 = crear_imagen_placeholder(200, 200, "#45B7D1", "Stats")
+        # Cuando tengas tus imágenes .PNG, cámbialas así:
+        # self.img_btn1 = tk.PhotoImage(file="boton_modo1.png")
+        # btn_modo1 = tk.Button(..., image=self.img_btn1, ...)
         
-        btn_modo1 = tk.Button(frame_botones, image=self.img_btn1, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8",
+        btn_modo1 = tk.Button(frame_botones, text="[Imagen\nModo 1]", font=("Helvetica", 14), width=15, height=7, bg="#FF6B6B", fg="white",
                               command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=1))
         btn_modo1.grid(row=0, column=0, padx=30, pady=10)
         tk.Label(frame_botones, text="Modo 1: Pizarra", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=0, pady=(0, 20))
         
-        btn_modo2 = tk.Button(frame_botones, image=self.img_btn2, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8",
+        btn_modo2 = tk.Button(frame_botones, text="[Imagen\nModo 2]", font=("Helvetica", 14), width=15, height=7, bg="#4ECDC4", fg="white",
                               command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=2))
         btn_modo2.grid(row=0, column=1, padx=30, pady=10)
         tk.Label(frame_botones, text="Modo 2: Conteo", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=1, pady=(0, 20))
         
-        # Enlace corregido a la pantalla de estadísticas
-        btn_stats = tk.Button(frame_botones, image=self.img_btn3, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8",
+        btn_stats = tk.Button(frame_botones, text="[Imagen\nEstadísticas]", font=("Helvetica", 14), width=15, height=7, bg="#45B7D1", fg="white",
                               command=lambda: self.controller.mostrar_pantalla("PantallaStats"))
         btn_stats.grid(row=0, column=2, padx=30, pady=10)
         tk.Label(frame_botones, text="Estadísticas", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=2, pady=(0, 20))
@@ -128,31 +119,24 @@ class PantallaModo(tk.Frame):
         self.max_niveles = 5
         self.cap = None
         self.camara_loop = None
+        self.imgtk = None # Referencia nativa para evitar que el recolector de basura borre el video
         
-        # --- ZONA SUPERIOR ---
+        # --- ZONA SUPERIOR (SOLO RETURN TO HOME) ---
         self.top_frame = tk.Frame(self, bg="#ffffff")
         self.top_frame.pack(fill="x", pady=10, padx=20)
         
         self.lbl_info = tk.Label(self.top_frame, text="", font=("Helvetica", 16, "bold"), bg="#ffffff", fg="#333")
-        self.lbl_info.pack(side="left", align="center" if False else None) # Corrección empaquetado lateral
+        self.lbl_info.pack(side="left")
         
-        # Contenedor apilado para los botones de la esquina superior derecha
-        frame_controles = tk.Frame(self.top_frame, bg="#ffffff")
-        frame_controles.pack(side="right")
-        
-        tk.Button(frame_controles, text="🏠 Return to Home", font=("Helvetica", 11, "bold"), bg="#FF5252", fg="white", bd=0,
-                  cursor="hand2", padx=15, pady=4, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="top", fill="x", pady=(0, 5))
-        
-        tk.Button(frame_controles, text="🚪 Cerrar Sesión", font=("Helvetica", 11, "bold"), bg="#757575", fg="white", bd=0,
-                  cursor="hand2", padx=15, pady=4, command=self.controller.cerrar_sesion).pack(side="top", fill="x")
+        tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", 11, "bold"), bg="#FF5252", fg="white", bd=0,
+                  cursor="hand2", padx=15, pady=4, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
         
         # --- ZONA JUEGO ---
         self.juego_frame = tk.Frame(self, bg="#ffffff")
         self.juego_frame.pack(expand=True, fill="both")
         
-        # Imagen del ejercicio sacada de directorio
-        self.img_ejercicio = crear_imagen_placeholder(400, 150, "#F0F0F0", "Ejercicio")
-        self.lbl_ejercicio = tk.Label(self.juego_frame, image=self.img_ejercicio, bg="#ffffff")
+        # Imagen del ejercicio (Placeholder nativo)
+        self.lbl_ejercicio = tk.Label(self.juego_frame, text="[Imagen del Ejercicio .PNG]", bg="#F0F0F0", width=50, height=8)
         self.lbl_ejercicio.pack(pady=10)
         
         # Feed de la cámara web
@@ -184,11 +168,12 @@ class PantallaModo(tk.Frame):
             ret, frame = self.cap.read()
             if ret:
                 frame = cv2.resize(frame, (400, 300))
-                cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                img = Image.fromarray(cv2image)
-                imgtk = ImageTk.PhotoImage(image=img)
-                self.lbl_camara.imgtk = imgtk
-                self.lbl_camara.configure(image=imgtk)
+                # TRUCO SIN PILLOW: Codificamos el frame en memoria a formato PPM (compatible nativo con Tkinter)
+                ret_encode, buffer = cv2.imencode('.ppm', frame)
+                if ret_encode:
+                    self.imgtk = tk.PhotoImage(data=buffer.tobytes())
+                    self.lbl_camara.configure(image=self.imgtk)
+                    
             self.camara_loop = self.after(15, self.actualizar_camara)
 
     def detener_camara(self):
@@ -226,14 +211,18 @@ class PantallaModo(tk.Frame):
         tk.Label(popup, text=f"Aciertos: {self.controller.respuestas_correctas} de 3", 
                  font=("Helvetica", 14), bg="#FFF9C4").pack(pady=10)
         
-        btn_ok = tk.Button(popup, text="Siguiente Nivel", font=("Helvetica", 12, "bold"), bg="#4CAF50", fg="white",
-                           command=lambda: self.avanzar_nivel(popup))
+        # Determinar si es el último nivel para cambiar el texto del botón y la acción
+        es_ultimo_nivel = (self.controller.nivel_actual >= self.max_niveles)
+        texto_btn = "Finalizar Modo" if es_ultimo_nivel else "Siguiente Nivel"
+        
+        btn_ok = tk.Button(popup, text=texto_btn, font=("Helvetica", 12, "bold"), bg="#4CAF50", fg="white",
+                           command=lambda: self.avanzar_nivel(popup, es_ultimo_nivel))
         btn_ok.pack(pady=10)
 
-    def avanzar_nivel(self, popup):
+    def avanzar_nivel(self, popup, es_ultimo_nivel):
         popup.destroy()
         
-        if self.controller.nivel_actual < self.max_niveles:
+        if not es_ultimo_nivel:
             self.controller.nivel_actual += 1
             self.controller.pregunta_actual = 1
             self.controller.respuestas_correctas = 0
@@ -242,38 +231,27 @@ class PantallaModo(tk.Frame):
             self.cap = cv2.VideoCapture(0)
             self.actualizar_camara()
         else:
-            # Reemplazo de la pantalla final por redirección limpia a Home con aviso
-            messagebox.showinfo("¡Felicidades!", f"¡Has completado todos los niveles del Modo {self.modo_actual}!")
+            # RETORNO AUTOMÁTICO A HOME
             self.controller.mostrar_pantalla("PantallaHome")
 
 class PantallaStats(tk.Frame):
-    """Nueva pantalla de estadísticas solicitada."""
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#ffffff")
         self.controller = controller
         
-        # --- ZONA SUPERIOR ---
+        # --- ZONA SUPERIOR (SOLO RETURN TO HOME) ---
         self.top_frame = tk.Frame(self, bg="#ffffff")
         self.top_frame.pack(fill="x", pady=10, padx=20)
         
         tk.Label(self.top_frame, text="Panel de Estadísticas", font=("Helvetica", 20, "bold"), bg="#ffffff", fg="#2C3E50").pack(side="left")
         
-        # Contenedor apilado idéntico en la esquina superior derecha
-        frame_controles = tk.Frame(self.top_frame, bg="#ffffff")
-        frame_controles.pack(side="right")
+        tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", 11, "bold"), bg="#FF5252", fg="white", bd=0,
+                  cursor="hand2", padx=15, pady=4, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
         
-        tk.Button(frame_controles, text="🏠 Return to Home", font=("Helvetica", 11, "bold"), bg="#FF5252", fg="white", bd=0,
-                  cursor="hand2", padx=15, pady=4, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="top", fill="x", pady=(0, 5))
+        # --- CONTENIDO ---
+        tk.Label(self, text="[Imagen de Gráfica .PNG]", bg="#A3E4D7", width=60, height=20).pack(pady=40)
         
-        tk.Button(frame_controles, text="🚪 Cerrar Sesión", font=("Helvetica", 11, "bold"), bg="#757575", fg="white", bd=0,
-                  cursor="hand2", padx=15, pady=4, command=self.controller.cerrar_sesion).pack(side="top", fill="x")
-        
-        # --- CONTENIDO DE ESTADÍSTICAS (Imagen temporal) ---
-        self.img_grafica_temp = crear_imagen_placeholder(600, 380, "#A3E4D7", "Gráfica de Rendimiento Escolar")
-        self.lbl_grafica = tk.Label(self, image=self.img_grafica_temp, bg="#ffffff")
-        self.lbl_grafica.pack(pady=40)
-        
-        tk.Label(self, text="* Aquí se desplegarán las métricas de aciertos y rendimiento por modo.", 
+        tk.Label(self, text="* Aquí se desplegarán las métricas de aciertos y rendimiento.", 
                  font=("Helvetica", 11, "italic"), bg="#ffffff", fg="#666").pack()
 
 if __name__ == "__main__":
