@@ -1,0 +1,259 @@
+import tkinter as tk
+from tkinter import messagebox
+import cv2
+from PIL import Image, ImageTk, ImageDraw
+
+def crear_imagen_placeholder(ancho, alto, color, texto):
+    """Crea una imagen provisional de color sólido si no existen las imágenes reales."""
+    img = Image.new('RGB', (ancho, alto), color=color)
+    # Dibujar un texto simple en el centro no es trivial sin fuentes cargadas, 
+    # pero el color sólido servirá de botón visual temporal.
+    return ImageTk.PhotoImage(img)
+
+class SistemaEducativoApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Sistema Educativo Inteligente")
+        self.geometry("900x700")
+        self.configure(bg="#E8F4F8") # Azul claro amigable para niños
+        
+        # Variables globales de la sesión
+        self.usuario_actual = ""
+        self.nivel_actual = 1
+        self.pregunta_actual = 1
+        self.respuestas_correctas = 0
+        
+        # Contenedor principal donde se apilarán las pantallas
+        self.container = tk.Frame(self, bg="#E8F4F8")
+        self.container.pack(fill="both", expand=True)
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
+        
+        self.frames = {}
+        
+        for F in (PantallaInicio, PantallaHome, PantallaModo):
+            page_name = F.__name__
+            frame = F(parent=self.container, controller=self)
+            self.frames[page_name] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+            
+        self.mostrar_pantalla("PantallaInicio")
+
+    def mostrar_pantalla(self, page_name, modo=None):
+        frame = self.frames[page_name]
+        
+        if page_name == "PantallaModo" and modo is not None:
+            frame.iniciar_modo(modo)
+        elif page_name == "PantallaHome" or page_name == "PantallaInicio":
+            if "PantallaModo" in self.frames:
+                self.frames["PantallaModo"].detener_camara()
+                
+        frame.tkraise()
+
+    def cerrar_sesion(self):
+        self.usuario_actual = ""
+        self.mostrar_pantalla("PantallaInicio")
+
+class PantallaInicio(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="#E8F4F8")
+        self.controller = controller
+        
+        # Imagen decorativa (Placeholder)
+        self.img_deco = crear_imagen_placeholder(300, 200, "#FFD700", "Decoración")
+        tk.Label(self, image=self.img_deco, bg="#E8F4F8").pack(pady=40)
+        
+        tk.Label(self, text="¡Aprende Jugando!", font=("Helvetica", 28, "bold"), bg="#E8F4F8", fg="#333333").pack(pady=10)
+        tk.Label(self, text="Ingresa tu nombre para empezar:", font=("Helvetica", 14), bg="#E8F4F8").pack(pady=10)
+        
+        self.entry_usuario = tk.Entry(self, font=("Helvetica", 16), justify="center", width=20, bd=2, relief="groove")
+        self.entry_usuario.pack(pady=10)
+        self.entry_usuario.bind('<Return>', self.iniciar_sesion)
+        
+        tk.Button(self, text="ENTRAR", command=self.iniciar_sesion, font=("Helvetica", 14, "bold"), 
+                  bg="#4CAF50", fg="white", padx=20, pady=5, cursor="hand2").pack(pady=20)
+        
+    def iniciar_sesion(self, event=None):
+        usuario = self.entry_usuario.get().strip()
+        if usuario:
+            self.controller.usuario_actual = usuario
+            self.entry_usuario.delete(0, tk.END) # Limpiar para el próximo usuario
+            self.controller.mostrar_pantalla("PantallaHome")
+        else:
+            messagebox.showwarning("Falta nombre", "¡Por favor dime cómo te llamas!")
+
+class PantallaHome(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="#E8F4F8")
+        self.controller = controller
+        
+        tk.Label(self, text="Elige tu Aventura", font=("Helvetica", 26, "bold"), bg="#E8F4F8", fg="#2C3E50").pack(pady=40)
+        
+        frame_botones = tk.Frame(self, bg="#E8F4F8")
+        frame_botones.pack(expand=True)
+        
+        # Generar imágenes para los botones de imagen
+        self.img_btn1 = crear_imagen_placeholder(200, 200, "#FF6B6B", "Modo 1")
+        self.img_btn2 = crear_imagen_placeholder(200, 200, "#4ECDC4", "Modo 2")
+        self.img_btn3 = crear_imagen_placeholder(200, 200, "#45B7D1", "Stats")
+        
+        btn_modo1 = tk.Button(frame_botones, image=self.img_btn1, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8",
+                              command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=1))
+        btn_modo1.grid(row=0, column=0, padx=30, pady=20)
+        tk.Label(frame_botones, text="Modo 1: Pizarra", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=0)
+        
+        btn_modo2 = tk.Button(frame_botones, image=self.img_btn2, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8",
+                              command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=2))
+        btn_modo2.grid(row=0, column=1, padx=30, pady=20)
+        tk.Label(frame_botones, text="Modo 2: Conteo", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=1)
+        
+        btn_stats = tk.Button(frame_botones, image=self.img_btn3, bd=0, cursor="hand2", bg="#E8F4F8", activebackground="#E8F4F8")
+        btn_stats.grid(row=0, column=2, padx=30, pady=20)
+        tk.Label(frame_botones, text="Estadísticas", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=2)
+
+class PantallaModo(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="#ffffff")
+        self.controller = controller
+        self.modo_actual = None
+        self.max_niveles = 5
+        self.cap = None
+        self.camara_loop = None
+        
+        # --- ZONA SUPERIOR ---
+        self.top_frame = tk.Frame(self, bg="#ffffff")
+        self.top_frame.pack(fill="x", pady=10, padx=20)
+        
+        self.lbl_info = tk.Label(self.top_frame, text="", font=("Helvetica", 16, "bold"), bg="#ffffff", fg="#333")
+        self.lbl_info.pack(side="left")
+        
+        tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", 12, "bold"), bg="#FF5252", fg="white", bd=0,
+                  cursor="hand2", padx=10, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
+        
+        # --- ZONA JUEGO ---
+        self.juego_frame = tk.Frame(self, bg="#ffffff")
+        self.juego_frame.pack(expand=True, fill="both")
+        
+        # Imagen del ejercicio
+        self.img_ejercicio = crear_imagen_placeholder(400, 150, "#F0F0F0", "Ejercicio")
+        self.lbl_ejercicio = tk.Label(self.juego_frame, image=self.img_ejercicio, bg="#ffffff")
+        self.lbl_ejercicio.pack(pady=10)
+        
+        # Feed de la cámara
+        self.lbl_camara = tk.Label(self.juego_frame, bg="black", width=400, height=300)
+        self.lbl_camara.pack(pady=10)
+        
+        self.btn_mandar = tk.Button(self.juego_frame, text="MANDAR RESPUESTA", font=("Helvetica", 14, "bold"), 
+                                    bg="#2196F3", fg="white", cursor="hand2", padx=20, command=self.evaluar_respuesta)
+        self.btn_mandar.pack(pady=15)
+        
+        # --- ZONA FIN DE MODO ---
+        self.fin_frame = tk.Frame(self, bg="#ffffff")
+        # No se empaqueta al inicio, solo al terminar el modo
+        tk.Label(self.fin_frame, text="¡Has completado todos los niveles!", font=("Helvetica", 24, "bold"), fg="#4CAF50", bg="#ffffff").pack(pady=40)
+        tk.Button(self.fin_frame, text="Regresar a Home", font=("Helvetica", 14), bg="#2196F3", fg="white", width=20,
+                  command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(pady=10)
+        tk.Button(self.fin_frame, text="Cerrar Intento / Sesión", font=("Helvetica", 14), bg="#FF9800", fg="white", width=20,
+                  command=self.controller.cerrar_sesion).pack(pady=10)
+
+    def iniciar_modo(self, modo):
+        self.modo_actual = modo
+        self.controller.nivel_actual = 1
+        self.controller.pregunta_actual = 1
+        self.controller.respuestas_correctas = 0
+        self.max_niveles = 5 if modo == 1 else 2
+        
+        # Mostrar UI de juego y ocultar fin de modo
+        self.fin_frame.pack_forget()
+        self.juego_frame.pack(expand=True, fill="both")
+        
+        self.actualizar_ui_textos()
+        
+        self.detener_camara()
+        self.cap = cv2.VideoCapture(0)
+        self.actualizar_camara()
+        
+    def actualizar_ui_textos(self):
+        txt = f"Modo {self.modo_actual} | Nivel {self.controller.nivel_actual}/{self.max_niveles} | Pregunta {self.controller.pregunta_actual}/3"
+        self.lbl_info.config(text=txt)
+
+    def actualizar_camara(self):
+        if self.cap and self.cap.isOpened():
+            ret, frame = self.cap.read()
+            if ret:
+                frame = cv2.resize(frame, (400, 300))
+                # Corrección de colores para OpenCV -> Tkinter (BGR a RGB)
+                cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(cv2image)
+                imgtk = ImageTk.PhotoImage(image=img)
+                self.lbl_camara.imgtk = imgtk
+                self.lbl_camara.configure(image=imgtk)
+            
+            self.camara_loop = self.after(15, self.actualizar_camara)
+
+    def detener_camara(self):
+        if self.camara_loop:
+            self.after_cancel(self.camara_loop)
+            self.camara_loop = None
+        if self.cap:
+            self.cap.release()
+            self.cap = None
+
+    def evaluar_respuesta(self):
+        # Aquí va la validación con IA / Raspberry
+        self.controller.respuestas_correctas += 1 # Simula respuesta correcta
+        
+        if self.controller.pregunta_actual < 3:
+            self.controller.pregunta_actual += 1
+            self.actualizar_ui_textos()
+        else:
+            self.detener_camara()
+            self.mostrar_popup_recompensa()
+
+    def mostrar_popup_recompensa(self):
+        # Ventana secundaria (Pop-up)
+        popup = tk.Toplevel(self)
+        popup.title("¡Nivel Terminado!")
+        popup.geometry("350x200")
+        popup.configure(bg="#FFF9C4") # Amarillo claro
+        
+        # Centrar el popup respecto a la ventana principal
+        x = self.winfo_rootx() + (self.winfo_width() // 2) - 175
+        y = self.winfo_rooty() + (self.winfo_height() // 2) - 100
+        popup.geometry(f"+{x}+{y}")
+        
+        # Hacer que el popup bloquee la ventana principal hasta que se cierre
+        popup.transient(self.controller)
+        popup.grab_set()
+        
+        tk.Label(popup, text="¡Bien Hecho!", font=("Helvetica", 24, "bold"), fg="#FF9800", bg="#FFF9C4").pack(pady=20)
+        tk.Label(popup, text=f"Aciertos: {self.controller.respuestas_correctas} de 3", 
+                 font=("Helvetica", 14), bg="#FFF9C4").pack(pady=10)
+        
+        btn_ok = tk.Button(popup, text="Siguiente Nivel", font=("Helvetica", 12, "bold"), bg="#4CAF50", fg="white",
+                           command=lambda: self.avanzar_nivel(popup))
+        btn_ok.pack(pady=10)
+
+    def avanzar_nivel(self, popup):
+        popup.destroy() # Cierra la sub-ventana
+        
+        if self.controller.nivel_actual < self.max_niveles:
+            self.controller.nivel_actual += 1
+            self.controller.pregunta_actual = 1
+            self.controller.respuestas_correctas = 0
+            self.actualizar_ui_textos()
+            
+            # Reactivar cámara para el nuevo nivel
+            self.cap = cv2.VideoCapture(0)
+            self.actualizar_camara()
+        else:
+            # Termina el modo actual
+            self.mostrar_pantalla_fin_modo()
+
+    def mostrar_pantalla_fin_modo(self):
+        self.juego_frame.pack_forget() # Oculta la cámara y el botón de enviar
+        self.fin_frame.pack(expand=True, fill="both") # Muestra opciones finales
+
+if __name__ == "__main__":
+    app = SistemaEducativoApp()
+    app.mainloop()
