@@ -14,15 +14,12 @@ def ordenar_puntos(puntos):
 
 cap = cv2.VideoCapture(0)
 
-print("Iniciando modo Auto-Robusto. Presiona 'q' para salir.")
+print("Presiona 'q' para salir")
 
 while True:
     ret, frame = cap.read()
     if not ret: break
 
-    # ==========================================
-    # ETAPA 1: LOCALIZAR LA PIZARRA
-    # ==========================================
     gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gris, (5, 5), 0)
     bordes = cv2.Canny(blur, 50, 150)
@@ -47,33 +44,21 @@ while True:
         matriz = cv2.getPerspectiveTransform(puntos_origen, puntos_destino)
         pizarra_plana = cv2.warpPerspective(frame, matriz, (ancho, alto))
 
-        # ==========================================
-        # ETAPA 2: PROCESAMIENTO INVARIANTE A LUZ/DISTANCIA
-        # ==========================================
         gris_pizarra = cv2.cvtColor(pizarra_plana, cv2.COLOR_BGR2GRAY)
         
-        # Blur ligero para no borrar la tinta desde lejos
         blur_pizarra = cv2.GaussianBlur(gris_pizarra, (5, 5), 0)
 
-        # ADAPTATIVE THRESHOLD (Auto-calibrado a la luz del ambiente)
-        # Block Size = 25 (grande para ignorar sombras anchas)
-        # C = 15 (fuerte para matar el ruido de fondo)
         binarizada = cv2.adaptiveThreshold(
             blur_pizarra, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 15
         )
 
-        # PEGAMENTO MORFOLÓGICO (Soluciona el problema de la distancia)
-        # Conecta los puntos rotos de la tinta estirada antes de evaluarlos
         kernel_cierre = np.ones((5, 5), np.uint8)
         trazos_unidos = cv2.morphologyEx(binarizada, cv2.MORPH_CLOSE, kernel_cierre)
 
-        # ENGROSAMIENTO LIGERO (Asegura volumen para la IA)
         kernel_dilatacion = np.ones((3, 3), np.uint8)
         dilatada = cv2.dilate(trazos_unidos, kernel_dilatacion, iterations=1)
 
-        # ==========================================
-        # ETAPA 3: FILTRADO GEOMÉTRICO (Bounding Box)
-        # ==========================================
+
         contornos_numeros, _ = cv2.findContours(dilatada, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         for c in contornos_numeros:
@@ -82,15 +67,12 @@ while True:
             relacion_aspecto = float(w) / h
 
             if area_caja < 150:
-                # Muy pequeño -> Basura/Ruido (AMARILLO)
                 cv2.rectangle(pizarra_plana, (x, y), (x + w, y + h), (0, 255, 255), 1)
             else:
                 if 0.15 <= relacion_aspecto <= 1.6:
-                    # NÚMERO CORRECTO -> AZUL
                     cv2.rectangle(pizarra_plana, (x, y), (x + w, y + h), (255, 0, 0), 2)
                     cv2.putText(pizarra_plana, "OK", (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
                 else:
-                    # Forma inválida (raya, borde) -> ROJO
                     cv2.rectangle(pizarra_plana, (x, y), (x + w, y + h), (0, 0, 255), 1)
 
         cv2.imshow("1. Vista Final (Detecciones)", pizarra_plana)
