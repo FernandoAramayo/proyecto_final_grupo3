@@ -85,7 +85,7 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
     if not cajas_validas:
         return (None, 0.0, "NO_NUMEROS")
 
-    # ORDENAR DE IZQUIERDA A DERECHA (Para leer números de varias cifras correctamente)
+    # Orden de izquierda a derecha (Para leer números de varias cifras correctamente)
     # Se ordena basándose en la coordenada 'x' de cada caja
     cajas_validas = sorted(cajas_validas, key=lambda b: b[0])
     
