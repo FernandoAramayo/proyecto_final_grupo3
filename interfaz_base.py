@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 import cv2
 import tensorflow as tf
+import os
+import random
 import gestor_datos  
 import banco_ejercicios
 import motor_vision  
@@ -18,6 +20,7 @@ class SistemaEducativoApp(tk.Tk):
         self.usuario_actual = ""
         self.respuestas_correctas = 0
         self.respuestas_incorrectas = 0
+        self.imagenes_vistas = [] # Historial para no repetir imágenes en el Modo 2
         
         self.progreso = {
             1: {'nivel': 1, 'pregunta': 1},
@@ -74,27 +77,24 @@ class SistemaEducativoApp(tk.Tk):
             self.usuario_actual = ""
             self.respuestas_correctas = 0
             self.respuestas_incorrectas = 0
+            self.imagenes_vistas.clear() # Limpiar historial visual para el siguiente estudiante
             self.progreso = {1: {'nivel': 1, 'pregunta': 1}, 2: {'nivel': 1, 'pregunta': 1}}
             
         self.mostrar_pantalla("PantallaInicio")
 
-
 class PantallaInicio(tk.Frame):
+    # ... (Tu código de PantallaInicio permanece exactamente igual) ...
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
-        
         tk.Label(self, text="[Espacio para Imagen Decorativa .PNG]", bg="#FFD700", width=40, height=10).pack(pady=40)
         tk.Label(self, text="¡Aprende Jugando!", font=("Helvetica", 28, "bold"), bg="#E8F4F8", fg="#333333").pack(pady=10)
         tk.Label(self, text="Ingresa tu nombre para empezar o eliminar:", font=("Helvetica", 14), bg="#E8F4F8").pack(pady=10)
-        
         self.entry_usuario = tk.Entry(self, font=("Helvetica", 16), justify="center", width=20, bd=2, relief="groove")
         self.entry_usuario.pack(pady=10)
         self.entry_usuario.bind('<Return>', self.iniciar_sesion)
-        
         frame_botones_inicio = tk.Frame(self, bg="#E8F4F8")
         frame_botones_inicio.pack(pady=20)
-        
         tk.Button(frame_botones_inicio, text="ENTRAR", command=self.iniciar_sesion, font=("Helvetica", 14, "bold"), bg="#4CAF50", fg="white", padx=20, pady=5, cursor="hand2").grid(row=0, column=0, padx=10)
         tk.Button(frame_botones_inicio, text="ELIMINAR USUARIO", command=self.borrar_perfil, font=("Helvetica", 14, "bold"), bg="#F44336", fg="white", padx=15, pady=5, cursor="hand2").grid(row=0, column=1, padx=10)
         
@@ -124,8 +124,8 @@ class PantallaInicio(tk.Frame):
             else:
                 messagebox.showerror("Error", f"No se encontró registro para '{usuario}'.")
 
-
 class PantallaHome(tk.Frame):
+    # ... (Tu código de PantallaHome permanece exactamente igual) ...
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
@@ -133,7 +133,6 @@ class PantallaHome(tk.Frame):
         top_frame.pack(fill="x", pady=10, padx=20)
         tk.Button(top_frame, text="🚪 Cerrar Sesión", font=("Helvetica", 11, "bold"), bg="#757575", fg="white", bd=0, cursor="hand2", padx=15, pady=5, command=self.controller.cerrar_sesion).pack(side="right")
         tk.Label(self, text="Elige tu Aventura", font=("Helvetica", 26, "bold"), bg="#E8F4F8", fg="#2C3E50").pack(pady=20)
-        
         frame_botones = tk.Frame(self, bg="#E8F4F8")
         frame_botones.pack(expand=True)
         tk.Button(frame_botones, text="[Imagen\nModo 1]", font=("Helvetica", 14), width=15, height=7, bg="#FF6B6B", fg="white", command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=1)).grid(row=0, column=0, padx=30, pady=10)
@@ -143,7 +142,6 @@ class PantallaHome(tk.Frame):
         tk.Button(frame_botones, text="[Imagen\nEstadísticas]", font=("Helvetica", 14), width=15, height=7, bg="#45B7D1", fg="white", command=lambda: self.controller.mostrar_pantalla("PantallaStats")).grid(row=0, column=2, padx=30, pady=10)
         tk.Label(frame_botones, text="Estadísticas", font=("Helvetica", 14, "bold"), bg="#E8F4F8").grid(row=1, column=2, pady=(0, 20))
 
-
 class PantallaModo(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#ffffff")
@@ -152,7 +150,9 @@ class PantallaModo(tk.Frame):
         self.max_niveles = 5
         self.cap = None
         self.camara_loop = None
-        self.imgtk = None 
+        self.imgtk_cam = None 
+        self.imgtk_modo2 = None # Para mantener la foto de conteo en memoria
+        self.respuesta_modo2 = 0 # Guarda la respuesta extraída de la foto
         
         self.top_frame = tk.Frame(self, bg="#ffffff")
         self.top_frame.pack(fill="x", pady=10, padx=20)
@@ -162,8 +162,18 @@ class PantallaModo(tk.Frame):
         
         self.juego_frame = tk.Frame(self, bg="#ffffff")
         self.juego_frame.pack(expand=True, fill="both")
-        self.lbl_ejercicio = tk.Label(self.juego_frame, text="", font=("Helvetica", 48, "bold"), bg="#ffffff", fg="#2C3E50", width=15, height=2)
-        self.lbl_ejercicio.pack(pady=20)
+        
+        # --- ETIQUETAS DINÁMICAS ---
+        self.lbl_pregunta = tk.Label(self.juego_frame, text="", font=("Helvetica", 18, "bold"), bg="#ffffff", fg="#2196F3")
+        self.lbl_pregunta.pack(pady=(10, 0))
+        
+        # Etiqueta exclusiva para Modo 1 (Texto matemático)
+        self.lbl_ejercicio = tk.Label(self.juego_frame, text="", font=("Helvetica", 48, "bold"), bg="#ffffff", fg="#2C3E50", width=15, height=1)
+        
+        # Etiqueta exclusiva para Modo 2 (Imagen del dataset)
+        self.lbl_imagen_modo2 = tk.Label(self.juego_frame, bg="#F0F0F0")
+        
+        # Feed de cámara
         self.lbl_camara = tk.Label(self.juego_frame, bg="black", width=400, height=300)
         self.lbl_camara.pack(pady=10)
         
@@ -172,22 +182,74 @@ class PantallaModo(tk.Frame):
 
     def iniciar_modo(self, modo):
         self.modo_actual = modo
-        self.max_niveles = 5 if modo == 1 else 2
+        self.max_niveles = 5
+        
         self.actualizar_ui_textos()
+        
         self.detener_camara()
         self.cap = cv2.VideoCapture(0)
         self.actualizar_camara()
         
+    def cargar_imagen_ejercicio(self):
+        """Exclusiva de Modo 2: Busca imagen .jpg y extrae la respuesta."""
+        nivel = self.controller.progreso[self.modo_actual]['nivel']
+        carpeta = f"modo2_nivel{nivel}"
+        
+        if not os.path.exists(carpeta):
+            self.lbl_imagen_modo2.configure(image="", text=f"Falta carpeta:\n{carpeta}", width=40, height=5)
+            self.respuesta_modo2 = 0
+            return
+
+        archivos = [f for f in os.listdir(carpeta) if f.lower().endswith('.jpg')]
+        archivos_disponibles = [f for f in archivos if f not in self.controller.imagenes_vistas]
+        
+        if not archivos_disponibles:
+            self.lbl_imagen_modo2.configure(image="", text="¡Te quedaste sin imágenes nuevas!", width=40, height=5)
+            self.respuesta_modo2 = 0
+            return
+
+        imagen_elegida = random.choice(archivos_disponibles)
+        self.controller.imagenes_vistas.append(imagen_elegida)
+        
+        # EXTRACCIÓN DE LA RESPUESTA Y CATEGORÍA (Ej: "1_autos_4.jpg")
+        try:
+            nombre_sin_ext = imagen_elegida.split('.')[0]
+            partes = nombre_sin_ext.split('_') 
+            categoria = partes[1]
+            self.respuesta_modo2 = int(partes[2])
+            self.lbl_pregunta.config(text=f"¿Cuántos {categoria} hay en la imagen?")
+        except Exception as e:
+            print(f"Error procesando nombre: {e}")
+            self.respuesta_modo2 = 0
+            self.lbl_pregunta.config(text="¿Cuántos objetos ves?")
+
+        ruta_completa = os.path.join(carpeta, imagen_elegida)
+        img_cv = cv2.imread(ruta_completa)
+        
+        if img_cv is not None:
+            img_cv = cv2.resize(img_cv, (400, 150))
+            img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB) 
+            ret_encode, buffer = cv2.imencode('.ppm', img_rgb)
+            if ret_encode:
+                self.imgtk_modo2 = tk.PhotoImage(data=buffer.tobytes())
+                self.lbl_imagen_modo2.configure(image=self.imgtk_modo2, width=0, height=0)
+
     def actualizar_ui_textos(self):
         nivel = self.controller.progreso[self.modo_actual]['nivel']
         pregunta = self.controller.progreso[self.modo_actual]['pregunta']
         self.lbl_info.config(text=f"Modo {self.modo_actual} | Nivel {nivel}/{self.max_niveles} | Pregunta {pregunta}/3")
         
         if self.modo_actual == 1:
+            self.lbl_imagen_modo2.pack_forget() # Ocultar foto
+            self.lbl_ejercicio.pack(pady=10, before=self.lbl_camara) # Mostrar pizarra
+            self.lbl_pregunta.config(text="Resuelve la siguiente operación:")
             ejercicio = banco_ejercicios.obtener_ejercicio(nivel, pregunta)
             self.lbl_ejercicio.config(text=ejercicio["ecuacion"])
+            
         elif self.modo_actual == 2:
-            self.lbl_ejercicio.config(text="[Imagen a contar]")
+            self.lbl_ejercicio.pack_forget() # Ocultar pizarra matemática
+            self.lbl_imagen_modo2.pack(pady=10, before=self.lbl_camara) # Mostrar foto
+            self.cargar_imagen_ejercicio()
 
     def actualizar_camara(self):
         if self.cap and self.cap.isOpened():
@@ -196,8 +258,8 @@ class PantallaModo(tk.Frame):
                 frame_recorte = cv2.resize(frame, (400, 300))
                 ret_encode, buffer = cv2.imencode('.ppm', frame_recorte)
                 if ret_encode:
-                    self.imgtk = tk.PhotoImage(data=buffer.tobytes())
-                    self.lbl_camara.configure(image=self.imgtk)
+                    self.imgtk_cam = tk.PhotoImage(data=buffer.tobytes())
+                    self.lbl_camara.configure(image=self.imgtk_cam)
             self.camara_loop = self.after(15, self.actualizar_camara)
 
     def detener_camara(self):
@@ -211,17 +273,19 @@ class PantallaModo(tk.Frame):
     def evaluar_respuesta(self):
         if not self.cap or not self.cap.isOpened(): return
         
-        # Tomar la foto al presionar el botón
         ret, frame = self.cap.read()
         if not ret: return
 
-        # Determinar respuesta correcta según el nivel
-        nivel = self.controller.progreso[self.modo_actual]['nivel']
-        pregunta = self.controller.progreso[self.modo_actual]['pregunta']
-        ejercicio = banco_ejercicios.obtener_ejercicio(nivel, pregunta)
-        respuesta_esperada = int(ejercicio["respuesta"])
+        # Determinar la respuesta correcta basándonos en el Modo actual
+        if self.modo_actual == 1:
+            nivel = self.controller.progreso[self.modo_actual]['nivel']
+            pregunta = self.controller.progreso[self.modo_actual]['pregunta']
+            ejercicio = banco_ejercicios.obtener_ejercicio(nivel, pregunta)
+            respuesta_esperada = int(ejercicio["respuesta"])
+        else:
+            respuesta_esperada = self.respuesta_modo2
 
-        # Enviar el frame al motor de visión IA
+        # Enviar el frame al motor de visión IA (Misma lógica para ambos modos)
         numero_detectado, confianza, estado = motor_vision.leer_pizarra(
             frame, 
             self.controller.interpreter, 
@@ -229,7 +293,6 @@ class PantallaModo(tk.Frame):
             self.controller.output_details
         )
 
-        # Evaluar el resultado devuelto por el modelo
         if estado == "NO_PIZARRA":
             messagebox.showinfo("Ups!", "No logro ver la pizarra completa. Asegúrate de mostrar las 4 esquinas a la cámara.")
             return
@@ -237,9 +300,9 @@ class PantallaModo(tk.Frame):
             messagebox.showinfo("¡Pizarra en blanco!", "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta.")
             return
 
-        print(f"La IA detectó: {numero_detectado} | Confianza: {confianza:.1f}%")
+        print(f"IA detectó: {numero_detectado} | Confianza: {confianza:.1f}% | Esperaba: {respuesta_esperada}")
 
-        # Tolerancia a Fallos
+        # Lógica original de tolerancia a fallos del usuario
         if numero_detectado == respuesta_esperada and confianza >= 40.0:
             self.controller.respuestas_correctas += 1
             messagebox.showinfo("¡Correcto!", f"¡Excelente! Leí un {numero_detectado}.")
@@ -259,7 +322,7 @@ class PantallaModo(tk.Frame):
         pregunta_actual = self.controller.progreso[self.modo_actual]['pregunta']
         if pregunta_actual < 3:
             self.controller.progreso[self.modo_actual]['pregunta'] += 1
-            self.actualizar_ui_textos()
+            self.actualizar_ui_textos() # Esto recarga automáticamente banco_ejercicios o la foto
         else:
             self.detener_camara()
             self.mostrar_popup_recompensa()
@@ -294,8 +357,8 @@ class PantallaModo(tk.Frame):
         else:
             self.controller.mostrar_pantalla("PantallaHome")
 
-
 class PantallaStats(tk.Frame):
+    # ... (Tu código de PantallaStats permanece exactamente igual) ...
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#ffffff")
         self.controller = controller
@@ -305,7 +368,6 @@ class PantallaStats(tk.Frame):
         tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", 11, "bold"), bg="#FF5252", fg="white", bd=0, cursor="hand2", padx=15, pady=4, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
         tk.Label(self, text="[Imagen de Gráfica .PNG]", bg="#A3E4D7", width=60, height=20).pack(pady=40)
         tk.Label(self, text="* Aquí se desplegarán las métricas de aciertos y rendimiento.", font=("Helvetica", 11, "italic"), bg="#ffffff", fg="#666").pack()
-
 
 if __name__ == "__main__":
     app = SistemaEducativoApp()
