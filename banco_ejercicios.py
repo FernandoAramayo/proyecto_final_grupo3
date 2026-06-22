@@ -34,7 +34,6 @@ def obtener_ejercicio(nivel, pregunta_num):
     Devuelve un diccionario con la 'ecuacion' y la 'respuesta'
     basado en el nivel (1-5) y el número de pregunta (1-3).
     """
-    # Los índices en listas de Python empiezan en 0, por lo que restamos 1 a la pregunta
     indice = pregunta_num - 1
     
     # Validaciones de seguridad
