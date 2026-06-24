@@ -65,11 +65,11 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
     gris_pizarra = cv2.cvtColor(pizarra_plana, cv2.COLOR_BGR2GRAY)
     blur_pizarra = cv2.GaussianBlur(gris_pizarra, (5, 5), 0)
     binarizada = cv2.adaptiveThreshold(blur_pizarra, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 15)
-    
-    kernel_cierre = np.ones((5, 5), np.uint8)
-    trazos_unidos = cv2.morphologyEx(binarizada, cv2.MORPH_CLOSE, kernel_cierre)
+ 
     kernel_dilatacion = np.ones((3, 3), np.uint8)
-    dilatada = cv2.dilate(trazos_unidos, kernel_dilatacion, iterations=1)
+    dilatada = cv2.dilate(binarizada, kernel_dilatacion, iterations=1)
+    kernel_cierre = np.ones((3, 3), np.uint8) 
+    trazos_unidos = cv2.morphologyEx(dilatada, cv2.MORPH_CLOSE, kernel_cierre)
 
     contornos_numeros, _ = cv2.findContours(dilatada, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
