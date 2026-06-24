@@ -375,7 +375,7 @@ class PantallaModo(tk.Frame):
         elif numero_detectado == respuesta_esperada and confianza < 60.0:
             messagebox.showinfo("Casi...", f"Parece un {numero_detectado}, pero no estoy seguro. ¿Puedes remarcarlo y volver a mandar?")
         else:
-            if confianza >= 60.0:
+            if confianza >= 60.0 and numero_detectado > 100:
                 self.controller.respuestas_incorrectas += 1
                 self.controller.enviar_comando_pico("I")
                 messagebox.showerror("Aún no", f"Leí un {numero_detectado}. Esa no es la respuesta. ¡Sigue intentando!")
