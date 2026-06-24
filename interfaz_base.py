@@ -5,6 +5,7 @@ import tensorflow as tf
 import os
 import random
 import csv
+import serial
 import gestor_datos  
 import banco_ejercicios
 import motor_vision  
@@ -26,7 +27,6 @@ class SistemaEducativoApp(tk.Tk):
         super().__init__()
         self.title("Sistema Educativo Inteligente")
         
-        # Modo Kiosco (Pantalla completa multiplataforma)
         ancho_pantalla = self.winfo_screenwidth()
         alto_pantalla = self.winfo_screenheight()
         self.geometry(f"{ancho_pantalla}x{alto_pantalla}")
@@ -44,7 +44,6 @@ class SistemaEducativoApp(tk.Tk):
         
         gestor_datos.inicializar_csv()
         
-        # Variables de sesión
         self.usuario_actual = ""
         self.respuestas_correctas = 0
         self.respuestas_incorrectas = 0
@@ -55,12 +54,17 @@ class SistemaEducativoApp(tk.Tk):
             2: {'nivel': 1, 'pregunta': 1}
         }
         
-        print("Cargando modelo TFLite en memoria...")
         self.interpreter = tf.lite.Interpreter(model_path="modelo_numeros3.tflite")
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
-        print("Modelo cargado correctamente.")
+        
+        self.puerto_serial = None
+        try:
+            self.puerto_serial = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+            self.enviar_comando_pico("RESET")
+        except serial.SerialException:
+            pass
         
         self.container = tk.Frame(self, bg="#E8F4F8")
         self.container.pack(fill="both", expand=True)
@@ -75,6 +79,13 @@ class SistemaEducativoApp(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
             
         self.mostrar_pantalla("PantallaInicio")
+
+    def enviar_comando_pico(self, comando):
+        if self.puerto_serial and self.puerto_serial.is_open:
+            try:
+                self.puerto_serial.write((comando + '\n').encode('utf-8'))
+            except Exception:
+                pass
 
     def mostrar_pantalla(self, page_name, modo=None):
         frame = self.frames[page_name]
@@ -107,7 +118,6 @@ class SistemaEducativoApp(tk.Tk):
             }
             gestor_datos.guardar_sesion(datos_sesion)
             
-            # Limpieza de memoria temporal
             self.usuario_actual = ""
             self.respuestas_correctas = 0
             self.respuestas_incorrectas = 0
@@ -241,7 +251,6 @@ class PantallaModo(tk.Frame):
         self.detener_camara()
         
         self.cap = cv2.VideoCapture(0)
-        # Atenuación de exposición por hardware (dependiente del dispositivo)
         self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.3)
         self.actualizar_camara()
         
@@ -281,7 +290,6 @@ class PantallaModo(tk.Frame):
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB) 
             img_pil = Image.fromarray(img_rgb)
             
-            # Resampling y padding (Letterboxing)
             ancho_caja, alto_caja = 1280, 600
             img_pil.thumbnail((ancho_caja, alto_caja), Image.Resampling.LANCZOS)
             
@@ -314,7 +322,6 @@ class PantallaModo(tk.Frame):
         if self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
-                # Atenuación de exposición por software (Failsafe)
                 frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50) 
                 
                 frame_recorte = cv2.resize(frame, (1280, 720))
@@ -346,7 +353,6 @@ class PantallaModo(tk.Frame):
         else:
             respuesta_esperada = self.respuesta_modo2
 
-        # Inferencia con TFLite
         numero_detectado, confianza, estado = motor_vision.leer_pizarra(
             frame, 
             self.controller.interpreter, 
@@ -361,9 +367,9 @@ class PantallaModo(tk.Frame):
             messagebox.showinfo("¡Pizarra en blanco!", "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta.")
             return
 
-        # Tolerancia a fallos configurada al 40.0%
         if numero_detectado == respuesta_esperada and confianza >= 40.0:
             self.controller.respuestas_correctas += 1
+            self.controller.enviar_comando_pico("C")
             messagebox.showinfo("¡Correcto!", f"¡Excelente! Leí un {numero_detectado}.")
             self.avanzar_pregunta()
         elif numero_detectado == respuesta_esperada and confianza < 40.0:
@@ -371,6 +377,7 @@ class PantallaModo(tk.Frame):
         else:
             if confianza >= 40.0:
                 self.controller.respuestas_incorrectas += 1
+                self.controller.enviar_comando_pico("I")
                 messagebox.showerror("Aún no", f"Leí un {numero_detectado}. Esa no es la respuesta. ¡Sigue intentando!")
             else:
                 messagebox.showinfo("Trazo dudoso", "Veo trazos confusos, ¿podrías borrar y escribir los números más claros?")
@@ -483,8 +490,8 @@ class PantallaStats(tk.Frame):
                         self.tree.insert('', tk.END, values=(fecha, hora, aciertos, fallos, puntaje_str))
         except FileNotFoundError:
             pass
-        except Exception as e:
-            print(f"Error al leer el CSV: {e}")
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     app = SistemaEducativoApp()
