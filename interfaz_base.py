@@ -316,11 +316,6 @@ class PantallaModo(tk.Frame):
         if self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
-                #--- REDUCIR BRILLO POR SOFTWARE ---
-                # alpha = contraste (1.0 es normal)
-                # beta = brillo (valores negativos oscurecen la imagen)
-                frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50) 
-                
                 # --- CÁMARA HD ---
                 frame_recorte = cv2.resize(frame, (1280, 720))
                 img_rgb = cv2.cvtColor(frame_recorte, cv2.COLOR_BGR2RGB)
