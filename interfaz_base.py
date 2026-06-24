@@ -17,7 +17,6 @@ def cargar_imagen_tk(ruta, ancho, alto):
     if img_cv is not None:
         img_cv = cv2.resize(img_cv, (ancho, alto))
         img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
-        
         img_pil = Image.fromarray(img_rgb)
         return ImageTk.PhotoImage(image=img_pil)
     return None
@@ -27,19 +26,17 @@ class SistemaEducativoApp(tk.Tk):
         super().__init__()
         self.title("Sistema Educativo Inteligente")
         
-        # --- MODO KIOSCO (Pantalla Completa Automática) ---
+        # Modo Kiosco (Pantalla completa multiplataforma)
         ancho_pantalla = self.winfo_screenwidth()
         alto_pantalla = self.winfo_screenheight()
         self.geometry(f"{ancho_pantalla}x{alto_pantalla}")
         self.configure(bg="#E8F4F8")
         
-        # Forzar maximizado multiplataforma
         try:
             self.state('zoomed')
         except tk.TclError:
             self.attributes('-zoomed', True)
             
-        # --- TABLAS GIGANTES (Para TV de 55") ---
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Treeview.Heading", font=('Helvetica', 28, 'bold'), background="#45B7D1", foreground="white")
@@ -47,6 +44,7 @@ class SistemaEducativoApp(tk.Tk):
         
         gestor_datos.inicializar_csv()
         
+        # Variables de sesión
         self.usuario_actual = ""
         self.respuestas_correctas = 0
         self.respuestas_incorrectas = 0
@@ -109,6 +107,7 @@ class SistemaEducativoApp(tk.Tk):
             }
             gestor_datos.guardar_sesion(datos_sesion)
             
+            # Limpieza de memoria temporal
             self.usuario_actual = ""
             self.respuestas_correctas = 0
             self.respuestas_incorrectas = 0
@@ -122,7 +121,6 @@ class PantallaInicio(tk.Frame):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
         
-        # --- IMAGEN PRINCIPAL (Logo Gigante) ---
         self.img_inicio = cargar_imagen_tk("assets/inicio.jpg", 800, 500)
         if self.img_inicio:
             tk.Label(self, image=self.img_inicio, bg="#E8F4F8").pack(pady=60)
@@ -181,7 +179,6 @@ class PantallaHome(tk.Frame):
         frame_botones = tk.Frame(self, bg="#E8F4F8")
         frame_botones.pack(expand=True)
         
-        # --- BOTONES DE MENÚ EXTRA GRANDES (400x400) ---
         self.img_modo1 = cargar_imagen_tk("assets/modo1.jpg", 400, 400)
         self.img_modo2 = cargar_imagen_tk("assets/modo2.jpg", 400, 400)
         self.img_stats = cargar_imagen_tk("assets/stats.jpg", 400, 400)
@@ -228,11 +225,9 @@ class PantallaModo(tk.Frame):
         self.lbl_pregunta = tk.Label(self.juego_frame, text="", font=("Helvetica", 36, "bold"), bg="#ffffff", fg="#2196F3")
         self.lbl_pregunta.pack(pady=(20, 0))
         
-        # --- MATEMÁTICAS GIGANTES ---
         self.lbl_ejercicio = tk.Label(self.juego_frame, text="", font=("Helvetica", 120, "bold"), bg="#ffffff", fg="#2C3E50", width=10, height=1)
         self.lbl_imagen_modo2 = tk.Label(self.juego_frame, bg="#ffffff")
         
-        # --- CÁMARA RESOLUCIÓN HD (1280x720) ---
         self.lbl_camara = tk.Label(self.juego_frame, bg="black", width=1280, height=720)
         self.lbl_camara.pack(pady=30)
         
@@ -244,7 +239,10 @@ class PantallaModo(tk.Frame):
         self.max_niveles = 5
         self.actualizar_ui_textos()
         self.detener_camara()
+        
         self.cap = cv2.VideoCapture(0)
+        # Atenuación de exposición por hardware (dependiente del dispositivo)
+        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.3)
         self.actualizar_camara()
         
     def cargar_imagen_ejercicio(self):
@@ -280,10 +278,10 @@ class PantallaModo(tk.Frame):
         ruta_completa = os.path.join(carpeta, imagen_elegida)
         img_cv = cv2.imread(ruta_completa)
         if img_cv is not None:
-            # --- FOTO DE MODO 2 GIGANTE ---
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB) 
             img_pil = Image.fromarray(img_rgb)
             
+            # Resampling y padding (Letterboxing)
             ancho_caja, alto_caja = 1280, 600
             img_pil.thumbnail((ancho_caja, alto_caja), Image.Resampling.LANCZOS)
             
@@ -316,14 +314,15 @@ class PantallaModo(tk.Frame):
         if self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
-                # --- CÁMARA HD ---
+                # Atenuación de exposición por software (Failsafe)
+                frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50) 
+                
                 frame_recorte = cv2.resize(frame, (1280, 720))
                 img_rgb = cv2.cvtColor(frame_recorte, cv2.COLOR_BGR2RGB)
                 img_pil = Image.fromarray(img_rgb)
                 self.imgtk_cam = ImageTk.PhotoImage(image=img_pil)
                 self.lbl_camara.configure(image=self.imgtk_cam)
             self.camara_loop = self.after(15, self.actualizar_camara)
-
 
     def detener_camara(self):
         if self.camara_loop:
@@ -347,6 +346,7 @@ class PantallaModo(tk.Frame):
         else:
             respuesta_esperada = self.respuesta_modo2
 
+        # Inferencia con TFLite
         numero_detectado, confianza, estado = motor_vision.leer_pizarra(
             frame, 
             self.controller.interpreter, 
@@ -361,6 +361,7 @@ class PantallaModo(tk.Frame):
             messagebox.showinfo("¡Pizarra en blanco!", "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta.")
             return
 
+        # Tolerancia a fallos configurada al 40.0%
         if numero_detectado == respuesta_esperada and confianza >= 40.0:
             self.controller.respuestas_correctas += 1
             messagebox.showinfo("¡Correcto!", f"¡Excelente! Leí un {numero_detectado}.")
@@ -387,7 +388,6 @@ class PantallaModo(tk.Frame):
         popup = tk.Toplevel(self)
         popup.title("¡Nivel Terminado!")
         
-        # --- POP-UP GIGANTE ---
         popup.geometry("800x400")
         popup.configure(bg="#FFF9C4")
         x = self.winfo_rootx() + (self.winfo_width() // 2) - 400
@@ -412,6 +412,7 @@ class PantallaModo(tk.Frame):
             self.controller.progreso[self.modo_actual]['pregunta'] = 1
             self.actualizar_ui_textos()
             self.cap = cv2.VideoCapture(0)
+            self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.3)
             self.actualizar_camara()
         else:
             self.controller.mostrar_pantalla("PantallaHome")
@@ -481,7 +482,7 @@ class PantallaStats(tk.Frame):
 
                         self.tree.insert('', tk.END, values=(fecha, hora, aciertos, fallos, puntaje_str))
         except FileNotFoundError:
-            print(f"El archivo {ruta_csv} aún no existe. Se creará al cerrar la primera sesión.")
+            pass
         except Exception as e:
             print(f"Error al leer el CSV: {e}")
 
