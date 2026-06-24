@@ -79,7 +79,7 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
         x, y, w, h = cv2.boundingRect(c)
         area_caja = w * h
         relacion_aspecto = float(w) / h
-        if area_caja > 150 and 0.15 <= relacion_aspecto <= 1.6:
+        if area_caja > 100 and h > 20 and 0.1 <= relacion_aspecto <= 1.5:
             cajas_validas.append((x, y, w, h))
 
     if not cajas_validas:
