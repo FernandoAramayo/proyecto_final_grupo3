@@ -367,15 +367,15 @@ class PantallaModo(tk.Frame):
             messagebox.showinfo("¡Pizarra en blanco!", "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta.")
             return
 
-        if numero_detectado == respuesta_esperada and confianza >= 40.0:
+        if numero_detectado == respuesta_esperada and confianza >= 60.0:
             self.controller.respuestas_correctas += 1
             self.controller.enviar_comando_pico("C")
             messagebox.showinfo("¡Correcto!", f"¡Excelente! Leí un {numero_detectado}.")
             self.avanzar_pregunta()
-        elif numero_detectado == respuesta_esperada and confianza < 40.0:
+        elif numero_detectado == respuesta_esperada and confianza < 60.0:
             messagebox.showinfo("Casi...", f"Parece un {numero_detectado}, pero no estoy seguro. ¿Puedes remarcarlo y volver a mandar?")
         else:
-            if confianza >= 40.0:
+            if confianza >= 60.0:
                 self.controller.respuestas_incorrectas += 1
                 self.controller.enviar_comando_pico("I")
                 messagebox.showerror("Aún no", f"Leí un {numero_detectado}. Esa no es la respuesta. ¡Sigue intentando!")
