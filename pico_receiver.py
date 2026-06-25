@@ -3,18 +3,20 @@ from time import sleep_ms
 import sys
 import select
 
-green_leds = [Pin(2, Pin.OUT), Pin(3, Pin.OUT), Pin(4, Pin.OUT)]
-red_leds = [Pin(5, Pin.OUT), Pin(6, Pin.OUT), Pin(7, Pin.OUT)]
+def set_up():
+    
+    green_leds = [Pin(2, Pin.OUT), Pin(3, Pin.OUT), Pin(4, Pin.OUT)]
+    red_leds = [Pin(5, Pin.OUT), Pin(6, Pin.OUT), Pin(7, Pin.OUT)]
 
-buzzer = Pin(8, Pin.OUT)
-servo = PWM(Pin(15))
-servo.freq(50)
+    buzzer = Pin(8, Pin.OUT)
+    servo = PWM(Pin(15))
+    servo.freq(50)
 
-led = Pin("LED", Pin.OUT)
-
-aciertos = 0
-RECOMPENSA_CADA = 5
-buffer_serial = ""
+    led = Pin("LED", Pin.OUT)
+        
+    aciertos = 0
+    RECOMPENSA_CADA = 5
+    buffer_serial = ""
 
 
 def apagar_todo():
@@ -157,25 +159,24 @@ servo_angle(0)
 
 print("PICO_2_LISTA")
 
-for _ in range(3):
-    led.value(1)
-    sleep_ms(150)
-    led.value(0)
-    sleep_ms(150)
-
 poll = select.poll()
 poll.register(sys.stdin, select.POLLIN)
 
-while True:
-    if poll.poll(50):
-        char = sys.stdin.read(1)
+def main():
+    set_up()
+    while True:
+        if poll.poll(50):
+            char = sys.stdin.read(1)
 
-        if char == "\n" or char == "\r":
-            if buffer_serial != "":
-                procesar(buffer_serial)
-                buffer_serial = ""
-        else:
-            buffer_serial += char
+            if char == "\n" or char == "\r":
+                if buffer_serial != "":
+                    procesar(buffer_serial)
+                    buffer_serial = ""
+            else:
+                buffer_serial += char
 
-            if len(buffer_serial) > 40:
-                buffer_serial = ""
+                if len(buffer_serial) > 40:
+                    buffer_serial = ""
+                
+if __name__ = "__main__":
+    main()
