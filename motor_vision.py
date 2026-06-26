@@ -65,7 +65,7 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
     blur_pizarra = cv2.GaussianBlur(gris_pizarra, (5, 5), 0)
     binarizada = cv2.adaptiveThreshold(blur_pizarra, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 15)
  
-    kerel_opening = np.ones((3, 3), np.uint8)
+    kernel_opening = np.ones((3, 3), np.uint8)
     dilatada= cv2.morphologyEx(kernel_opening, cv2.MORPH_OPEN, kernel_opening)
     kernel_cierre = np.ones((3, 3), np.uint8) 
     trazos_unidos = cv2.morphologyEx(dilatada, cv2.MORPH_CLOSE, kernel_cierre)
