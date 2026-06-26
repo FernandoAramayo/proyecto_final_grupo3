@@ -34,7 +34,6 @@ def guardar_sesion(datos_sesion):
         ])
         print(f"Sesión de {datos_sesion.get('nombre_usuario')} guardada con éxito.")
 
-# --- NUEVA FUNCIÓN ---
 def cargar_datos_usuario(nombre_usuario):
     """
     Busca al usuario en el CSV y devuelve un diccionario con su último progreso.
@@ -47,19 +46,17 @@ def cargar_datos_usuario(nombre_usuario):
     with open(ARCHIVO_CSV, mode='r', encoding='utf-8') as archivo:
         lector = csv.DictReader(archivo)
         for fila in lector:
-            # Comparamos ignorando mayúsculas/minúsculas
             if fila['nombre_usuario'].lower() == nombre_usuario.lower():
                 ultimo_registro = fila
                 
     if ultimo_registro:
-        # Retornamos los datos convirtiendo los textos a números enteros
         return {
             'nivel_modo1': int(ultimo_registro['nivel_modo1']),
             'pregunta_modo1': int(ultimo_registro['pregunta_modo1']),
             'nivel_modo2': int(ultimo_registro['nivel_modo2']),
             'pregunta_modo2': int(ultimo_registro['pregunta_modo2'])
         }
-    return None # Es un usuario nuevo
+    return None 
 
 def eliminar_usuario(nombre_usuario):
     """
@@ -72,8 +69,7 @@ def eliminar_usuario(nombre_usuario):
     filas_actualizadas = []
     usuario_encontrado = False
     campos = []
-    
-    # Leer el archivo completo y filtrar los datos
+
     with open(ARCHIVO_CSV, mode='r', encoding='utf-8') as archivo:
         lector = csv.DictReader(archivo)
         campos = lector.fieldnames
@@ -83,7 +79,6 @@ def eliminar_usuario(nombre_usuario):
             else:
                 filas_actualizadas.append(fila)
                 
-    # Si el usuario existía, reescribimos el archivo sin sus datos
     if usuario_encontrado:
         with open(ARCHIVO_CSV, mode='w', newline='', encoding='utf-8') as archivo:
             escritor = csv.DictWriter(archivo, fieldnames=campos)
