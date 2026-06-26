@@ -1,6 +1,3 @@
-# src/banco_ejercicios.py
-
-# Diccionario que almacena los niveles, ejercicios y sus respuestas esperadas.
 BANCO_MODO_1 = {
     1: [ # Sumas y Restas Básicas
         {"ecuacion": "8 + 5 = ?", "respuesta": "13"},
@@ -36,7 +33,6 @@ def obtener_ejercicio(nivel, pregunta_num):
     """
     indice = pregunta_num - 1
     
-    # Validaciones de seguridad
     if nivel not in BANCO_MODO_1:
         return {"ecuacion": "FIN", "respuesta": ""}
     if indice < 0 or indice >= len(BANCO_MODO_1[nivel]):
