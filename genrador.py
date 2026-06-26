@@ -28,6 +28,3 @@ def generar_imagenes_prueba():
             cv2.imwrite(ruta, img)
             print(f"Creado: {nombre_archivo}")
 
-if __name__ == "__main__":
-    generar_imagenes_prueba()
-    print("\n¡Listo! Directorios y banco de imágenes generados con éxito.")
