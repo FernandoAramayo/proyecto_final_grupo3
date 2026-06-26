@@ -35,10 +35,6 @@ def guardar_sesion(datos_sesion):
         print(f"Sesión de {datos_sesion.get('nombre_usuario')} guardada con éxito.")
 
 def cargar_datos_usuario(nombre_usuario):
-    """
-    Busca al usuario en el CSV y devuelve un diccionario con su último progreso.
-    Si no existe, devuelve valores por defecto (Nivel 1).
-    """
     if not os.path.exists(ARCHIVO_CSV):
         return None
         
@@ -59,10 +55,6 @@ def cargar_datos_usuario(nombre_usuario):
     return None 
 
 def eliminar_usuario(nombre_usuario):
-    """
-    Busca y elimina todas las filas asociadas a un usuario en el CSV.
-    Devuelve True si el usuario existía y fue eliminado, False de lo contrario.
-    """
     if not os.path.exists(ARCHIVO_CSV):
         return False
     
