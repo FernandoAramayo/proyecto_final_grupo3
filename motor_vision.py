@@ -55,7 +55,6 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
     if contorno_pizarra is None:
         return (None, 0.0, "NO_PIZARRA")
 
-    # Aplanar pizarra
     puntos_origen = ordenar_puntos(contorno_pizarra)
     ancho, alto = 400, 300
     puntos_destino = np.array([[0, 0], [ancho - 1, 0], [ancho - 1, alto - 1], [0, alto - 1]], dtype="float32")
@@ -85,8 +84,6 @@ def leer_pizarra(frame, interpreter, input_details, output_details):
     if not cajas_validas:
         return (None, 0.0, "NO_NUMEROS")
 
-    # Orden de izquierda a derecha (Para leer números de varias cifras correctamente)
-    # Se ordena basándose en la coordenada 'x' de cada caja
     cajas_validas = sorted(cajas_validas, key=lambda b: b[0])
     
     numero_str = ""
