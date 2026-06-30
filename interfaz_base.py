@@ -169,7 +169,7 @@ class PantallaInicio(tk.Frame):
     def borrar_perfil(self):
         usuario = self.entry_usuario.get().strip()
         if not usuario: return
-        confirmacion = messagebox.askyesno("Confirmar eliminación", f "¿Estás seguro de que deseas eliminar a '{usuario}'?")
+        confirmacion = messagebox.askyesno("Confirmar eliminación", f"¿Estás seguro de que deseas eliminar a '{usuario}'?")
         if confirmacion:
             if gestor_datos.eliminar_usuario(usuario):
                 messagebox.showinfo("Éxito", f"El usuario '{usuario}' eliminado correctamente.")
