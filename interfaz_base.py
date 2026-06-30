@@ -31,8 +31,8 @@ class SistemaEducativoApp(tk.Tk):
         self.w = self.winfo_screenwidth()
         self.h = self.winfo_screenheight()
         
-        # Factor de escala tomando 1920x1080 como resolución base de diseño
-        self.escala = self.w / 1920.0
+        # FACTOR DE ESCALA MEJORADO: Toma la dimensión más pequeña para evitar cortes
+        self.escala = min(self.w / 1920.0, self.h / 1080.0)
         
         self.geometry(f"{self.w}x{self.h}")
         self.configure(bg="#E8F4F8")
@@ -45,7 +45,6 @@ class SistemaEducativoApp(tk.Tk):
         style = ttk.Style()
         style.theme_use("clam")
         
-        # Estilos adaptables
         font_tree_head = int(28 * self.escala)
         font_tree_row = int(24 * self.escala)
         row_height = int(60 * self.escala)
@@ -92,7 +91,6 @@ class SistemaEducativoApp(tk.Tk):
         self.mostrar_pantalla("PantallaInicio")
         
     def f_size(self, size):
-        """Devuelve un tamaño de fuente proporcional a la pantalla"""
         return max(10, int(size * self.escala))
 
     def enviar_comando_pico(self, comando):
@@ -147,28 +145,27 @@ class PantallaInicio(tk.Frame):
         super().__init__(parent, bg="#E8F4F8")
         self.controller = controller
         
-        # Imágenes adaptables
         w_img = self.controller.w * 0.4
-        h_img = self.controller.h * 0.35
+        h_img = self.controller.h * 0.3
         
         self.img_inicio = cargar_imagen_tk("assets/inicio.jpg", w_img, h_img)
         if self.img_inicio:
-            tk.Label(self, image=self.img_inicio, bg="#E8F4F8").pack(pady=int(40 * self.controller.escala))
+            tk.Label(self, image=self.img_inicio, bg="#E8F4F8").pack(pady=int(20 * self.controller.escala))
         else:
-            tk.Label(self, text="[Falta assets/inicio.jpg]", bg="#FFD700", font=("Helvetica", self.controller.f_size(24)), width=40, height=5).pack(pady=40)
+            tk.Label(self, text="[Falta assets/inicio.jpg]", bg="#FFD700", font=("Helvetica", self.controller.f_size(24)), width=40, height=5).pack(pady=20)
         
-        tk.Label(self, text="¡Aprende Jugando!", font=("Helvetica", self.controller.f_size(64), "bold"), bg="#E8F4F8", fg="#333333").pack(pady=int(20*self.controller.escala))
-        tk.Label(self, text="Ingresa tu nombre para empezar o eliminar:", font=("Helvetica", self.controller.f_size(32)), bg="#E8F4F8").pack(pady=int(20*self.controller.escala))
+        tk.Label(self, text="¡Aprende Jugando!", font=("Helvetica", self.controller.f_size(64), "bold"), bg="#E8F4F8", fg="#333333").pack(pady=int(10*self.controller.escala))
+        tk.Label(self, text="Ingresa tu nombre para empezar o eliminar:", font=("Helvetica", self.controller.f_size(32)), bg="#E8F4F8").pack(pady=int(10*self.controller.escala))
         
         self.entry_usuario = tk.Entry(self, font=("Helvetica", self.controller.f_size(40)), justify="center", width=20, bd=4, relief="groove")
-        self.entry_usuario.pack(pady=int(30*self.controller.escala))
+        self.entry_usuario.pack(pady=int(20*self.controller.escala))
         self.entry_usuario.bind('<Return>', self.iniciar_sesion)
         
         frame_botones_inicio = tk.Frame(self, bg="#E8F4F8")
-        frame_botones_inicio.pack(pady=int(40*self.controller.escala))
+        frame_botones_inicio.pack(pady=int(20*self.controller.escala))
         
         pad_x = int(30 * self.controller.escala)
-        pad_y = int(15 * self.controller.escala)
+        pad_y = int(10 * self.controller.escala)
         tk.Button(frame_botones_inicio, text="ENTRAR", command=self.iniciar_sesion, font=("Helvetica", self.controller.f_size(28), "bold"), bg="#4CAF50", fg="white", padx=pad_x, pady=pad_y, cursor="hand2").grid(row=0, column=0, padx=20)
         tk.Button(frame_botones_inicio, text="ELIMINAR USUARIO", command=self.borrar_perfil, font=("Helvetica", self.controller.f_size(28), "bold"), bg="#F44336", fg="white", padx=pad_x, pady=pad_y, cursor="hand2").grid(row=0, column=1, padx=20)
         
@@ -204,43 +201,43 @@ class PantallaHome(tk.Frame):
         self.controller = controller
         
         top_frame = tk.Frame(self, bg="#E8F4F8")
-        top_frame.pack(fill="x", pady=int(30 * self.controller.escala), padx=int(50 * self.controller.escala))
+        top_frame.pack(fill="x", pady=int(20 * self.controller.escala), padx=int(40 * self.controller.escala))
         
         pad_x = int(30 * self.controller.escala)
         pad_y = int(15 * self.controller.escala)
         tk.Button(top_frame, text="🚪 Cerrar Sesión", font=("Helvetica", self.controller.f_size(24), "bold"), bg="#757575", fg="white", bd=0, cursor="hand2", padx=pad_x, pady=pad_y, command=self.controller.cerrar_sesion).pack(side="right")
         
-        tk.Label(self, text="Elige tu Aventura", font=("Helvetica", self.controller.f_size(72), "bold"), bg="#E8F4F8", fg="#2C3E50").pack(pady=int(50 * self.controller.escala))
+        tk.Label(self, text="Elige tu Aventura", font=("Helvetica", self.controller.f_size(72), "bold"), bg="#E8F4F8", fg="#2C3E50").pack(pady=int(30 * self.controller.escala))
         
         frame_botones = tk.Frame(self, bg="#E8F4F8")
         frame_botones.pack(expand=True)
         
-        # Botones cuadrados adaptables
-        tam_btn = int(self.controller.w * 0.22)
+        # Ajustamos el tamaño de los botones principales
+        tam_btn = int(min(self.controller.w * 0.22, self.controller.h * 0.35))
         
         self.img_modo1 = cargar_imagen_tk("assets/modo1.jpg", tam_btn, tam_btn)
         self.img_modo2 = cargar_imagen_tk("assets/modo2.jpg", tam_btn, tam_btn)
         self.img_stats = cargar_imagen_tk("assets/stats.jpg", tam_btn, tam_btn)
         
-        pad_btn_x = int(40 * self.controller.escala)
+        pad_btn_x = int(30 * self.controller.escala)
         
         btn_modo1 = tk.Button(frame_botones, command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=1), cursor="hand2", bd=0, bg="#E8F4F8", activebackground="#E8F4F8")
         if self.img_modo1: btn_modo1.config(image=self.img_modo1)
         else: btn_modo1.config(text="Modo 1", width=15, height=5, bg="#FF6B6B", fg="white", font=("Helvetica", self.controller.f_size(24)))
-        btn_modo1.grid(row=0, column=0, padx=pad_btn_x, pady=20)
-        tk.Label(frame_botones, text="Modo 1: Pizarra", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=0, pady=(0, 40))
+        btn_modo1.grid(row=0, column=0, padx=pad_btn_x, pady=15)
+        tk.Label(frame_botones, text="Modo 1: Pizarra", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=0, pady=(0, 20))
         
         btn_modo2 = tk.Button(frame_botones, command=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=2), cursor="hand2", bd=0, bg="#E8F4F8", activebackground="#E8F4F8")
         if self.img_modo2: btn_modo2.config(image=self.img_modo2)
         else: btn_modo2.config(text="Modo 2", width=15, height=5, bg="#4ECDC4", fg="white", font=("Helvetica", self.controller.f_size(24)))
-        btn_modo2.grid(row=0, column=1, padx=pad_btn_x, pady=20)
-        tk.Label(frame_botones, text="Modo 2: Conteo", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=1, pady=(0, 40))
+        btn_modo2.grid(row=0, column=1, padx=pad_btn_x, pady=15)
+        tk.Label(frame_botones, text="Modo 2: Conteo", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=1, pady=(0, 20))
         
         btn_stats = tk.Button(frame_botones, command=lambda: self.controller.mostrar_pantalla("PantallaStats"), cursor="hand2", bd=0, bg="#E8F4F8", activebackground="#E8F4F8")
         if self.img_stats: btn_stats.config(image=self.img_stats)
         else: btn_stats.config(text="Stats", width=15, height=5, bg="#45B7D1", fg="white", font=("Helvetica", self.controller.f_size(24)))
-        btn_stats.grid(row=0, column=2, padx=pad_btn_x, pady=20)
-        tk.Label(frame_botones, text="Estadísticas", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=2, pady=(0, 40))
+        btn_stats.grid(row=0, column=2, padx=pad_btn_x, pady=15)
+        tk.Label(frame_botones, text="Estadísticas", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#E8F4F8").grid(row=1, column=2, pady=(0, 20))
 
 class PantallaModo(tk.Frame):
     def __init__(self, parent, controller):
@@ -254,33 +251,33 @@ class PantallaModo(tk.Frame):
         self.imgtk_modo2 = None 
         self.respuesta_modo2 = 0 
         
-        # Calculamos proporciones para la cámara (Ej: 60% del ancho total de la pantalla)
-        self.ancho_camara = int(self.controller.w * 0.6)
-        self.alto_camara = int(self.controller.h * 0.55)
+        # AJUSTE: Cámara reducida al 35% de la altura para que no empuje el botón hacia abajo
+        self.ancho_camara = int(self.controller.w * 0.45)
+        self.alto_camara = int(self.controller.h * 0.35)
         
         self.top_frame = tk.Frame(self, bg="#ffffff")
-        self.top_frame.pack(fill="x", pady=int(15 * self.controller.escala), padx=int(40 * self.controller.escala))
+        self.top_frame.pack(fill="x", pady=int(10 * self.controller.escala), padx=int(30 * self.controller.escala))
         self.lbl_info = tk.Label(self.top_frame, text="", font=("Helvetica", self.controller.f_size(36), "bold"), bg="#ffffff", fg="#333")
         self.lbl_info.pack(side="left")
         
-        pad_x = int(30 * self.controller.escala)
-        pad_y = int(10 * self.controller.escala)
-        tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", self.controller.f_size(24), "bold"), bg="#FF5252", fg="white", bd=0, cursor="hand2", padx=pad_x, pady=pad_y, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
+        pad_x = int(25 * self.controller.escala)
+        pad_y = int(8 * self.controller.escala)
+        tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", self.controller.f_size(20), "bold"), bg="#FF5252", fg="white", bd=0, cursor="hand2", padx=pad_x, pady=pad_y, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
         
         self.juego_frame = tk.Frame(self, bg="#ffffff")
         self.juego_frame.pack(expand=True, fill="both")
         
         self.lbl_pregunta = tk.Label(self.juego_frame, text="", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#ffffff", fg="#2196F3")
-        self.lbl_pregunta.pack(pady=(10, 0))
+        self.lbl_pregunta.pack(pady=(5, 0))
         
-        self.lbl_ejercicio = tk.Label(self.juego_frame, text="", font=("Helvetica", self.controller.f_size(100), "bold"), bg="#ffffff", fg="#2C3E50", width=10, height=1)
+        self.lbl_ejercicio = tk.Label(self.juego_frame, text="", font=("Helvetica", self.controller.f_size(80), "bold"), bg="#ffffff", fg="#2C3E50", width=10, height=1)
         self.lbl_imagen_modo2 = tk.Label(self.juego_frame, bg="#ffffff")
         
         self.lbl_camara = tk.Label(self.juego_frame, bg="black", width=self.ancho_camara, height=self.alto_camara)
-        self.lbl_camara.pack(pady=int(20 * self.controller.escala))
+        self.lbl_camara.pack(pady=int(10 * self.controller.escala))
         
-        self.btn_mandar = tk.Button(self.juego_frame, text="MANDAR RESPUESTA", font=("Helvetica", self.controller.f_size(32), "bold"), bg="#2196F3", fg="white", cursor="hand2", padx=pad_x, pady=pad_y, command=self.evaluar_respuesta)
-        self.btn_mandar.pack(pady=int(20 * self.controller.escala))
+        self.btn_mandar = tk.Button(self.juego_frame, text="MANDAR RESPUESTA", font=("Helvetica", self.controller.f_size(28), "bold"), bg="#2196F3", fg="white", cursor="hand2", padx=pad_x, pady=pad_y, command=self.evaluar_respuesta)
+        self.btn_mandar.pack(pady=int(10 * self.controller.escala))
 
     def iniciar_modo(self, modo):
         self.modo_actual = modo
@@ -297,7 +294,7 @@ class PantallaModo(tk.Frame):
         carpeta = f"modo2_nivel{nivel}"
         
         if not os.path.exists(carpeta):
-            self.lbl_imagen_modo2.configure(image="", text=f"Falta carpeta:\n{carpeta}", font=("Helvetica", self.controller.f_size(32)), width=30, height=5, bg="#F0F0F0")
+            self.lbl_imagen_modo2.configure(image="", text=f"Falta carpeta:\n{carpeta}", font=("Helvetica", self.controller.f_size(32)), width=30, height=3, bg="#F0F0F0")
             self.respuesta_modo2 = 0
             return
 
@@ -305,7 +302,7 @@ class PantallaModo(tk.Frame):
         archivos_disponibles = [f for f in archivos if f not in self.controller.imagenes_vistas]
         
         if not archivos_disponibles:
-            self.lbl_imagen_modo2.configure(image="", text="¡Te quedaste sin imágenes nuevas!", font=("Helvetica", self.controller.f_size(32)), width=30, height=5, bg="#F0F0F0")
+            self.lbl_imagen_modo2.configure(image="", text="¡Te quedaste sin imágenes nuevas!", font=("Helvetica", self.controller.f_size(32)), width=30, height=3, bg="#F0F0F0")
             self.respuesta_modo2 = 0
             return
 
@@ -328,8 +325,9 @@ class PantallaModo(tk.Frame):
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB) 
             img_pil = Image.fromarray(img_rgb)
             
-            ancho_caja = int(self.controller.w * 0.6)
-            alto_caja = int(self.controller.h * 0.4)
+            # AJUSTE: Imagen de referencia reducida para que quepa junto con la cámara
+            ancho_caja = int(self.controller.w * 0.45)
+            alto_caja = int(self.controller.h * 0.3)
             img_pil.thumbnail((ancho_caja, alto_caja), Image.Resampling.LANCZOS)
             
             fondo = Image.new('RGB', (ancho_caja, alto_caja), "#ffffff")
@@ -345,7 +343,7 @@ class PantallaModo(tk.Frame):
         pregunta = self.controller.progreso[self.modo_actual]['pregunta']
         self.lbl_info.config(text=f"Modo {self.modo_actual} | Nivel {nivel}/{self.max_niveles} | Pregunta {pregunta}/3")
         
-        pad_dinamico = int(20 * self.controller.escala)
+        pad_dinamico = int(10 * self.controller.escala)
         
         if self.modo_actual == 1:
             self.lbl_imagen_modo2.pack_forget() 
@@ -365,7 +363,6 @@ class PantallaModo(tk.Frame):
             if ret:
                 frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50) 
                 
-                # Aquí se ajusta dinámicamente al tamaño calculado de la cámara
                 frame_recorte = cv2.resize(frame, (self.ancho_camara, self.alto_camara))
                 img_rgb = cv2.cvtColor(frame_recorte, cv2.COLOR_BGR2RGB)
                 img_pil = Image.fromarray(img_rgb)
@@ -449,7 +446,7 @@ class PantallaModo(tk.Frame):
         popup.transient(self.controller)
         popup.grab_set()
         
-        tk.Label(popup, text="¡Bien Hecho!", font=("Helvetica", self.controller.f_size(50), "bold"), fg="#FF9800", bg="#FFF9C4").pack(pady=int(40 * self.controller.escala))
+        tk.Label(popup, text="¡Bien Hecho!", font=("Helvetica", self.controller.f_size(50), "bold"), fg="#FF9800", bg="#FFF9C4").pack(pady=int(30 * self.controller.escala))
         
         nivel_actual = self.controller.progreso[self.modo_actual]['nivel']
         es_ultimo_nivel = (nivel_actual >= self.max_niveles)
@@ -457,7 +454,7 @@ class PantallaModo(tk.Frame):
         
         pad_x = int(30 * self.controller.escala)
         pad_y = int(15 * self.controller.escala)
-        tk.Button(popup, text=texto_btn, font=("Helvetica", self.controller.f_size(24), "bold"), bg="#4CAF50", fg="white", padx=pad_x, pady=pad_y, command=lambda: self.avanzar_nivel(popup, es_ultimo_nivel)).pack(pady=20)
+        tk.Button(popup, text=texto_btn, font=("Helvetica", self.controller.f_size(24), "bold"), bg="#4CAF50", fg="white", padx=pad_x, pady=pad_y, command=lambda: self.avanzar_nivel(popup, es_ultimo_nivel)).pack(pady=10)
 
     def avanzar_nivel(self, popup, es_ultimo_nivel):
         popup.destroy()
@@ -477,7 +474,7 @@ class PantallaStats(tk.Frame):
         self.controller = controller
         
         self.top_frame = tk.Frame(self, bg="#ffffff")
-        self.top_frame.pack(fill="x", pady=int(40*self.controller.escala), padx=int(60*self.controller.escala))
+        self.top_frame.pack(fill="x", pady=int(30*self.controller.escala), padx=int(50*self.controller.escala))
         
         self.lbl_titulo = tk.Label(self.top_frame, text="Panel de Estadísticas", font=("Helvetica", self.controller.f_size(48), "bold"), bg="#ffffff", fg="#2C3E50")
         self.lbl_titulo.pack(side="left")
@@ -487,10 +484,10 @@ class PantallaStats(tk.Frame):
         tk.Button(self.top_frame, text="🏠 Return to Home", font=("Helvetica", self.controller.f_size(24), "bold"), bg="#FF5252", fg="white", bd=0, cursor="hand2", padx=pad_x, pady=pad_y, command=lambda: self.controller.mostrar_pantalla("PantallaHome")).pack(side="right")
         
         frame_tabla = tk.Frame(self, bg="#ffffff")
-        frame_tabla.pack(fill="both", expand=True, padx=int(80*self.controller.escala), pady=int(40*self.controller.escala))
+        frame_tabla.pack(fill="both", expand=True, padx=int(60*self.controller.escala), pady=int(30*self.controller.escala))
         
         columnas = ("fecha", "hora", "correctas", "incorrectas", "puntaje")
-        self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=20)
+        self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=15)
         
         self.tree.heading("fecha", text="Fecha")
         self.tree.heading("hora", text="Hora")
