@@ -102,6 +102,8 @@ class SistemaEducativoApp(tk.Tk):
         frame.tkraise()
 
     def cerrar_sesion(self):
+        self.enviar_comando_pico("U")
+        
         if self.usuario_actual:
             total_intentos = self.respuestas_correctas + self.respuestas_incorrectas
             puntaje = (self.respuestas_correctas / total_intentos) if total_intentos > 0 else 0.0
@@ -167,7 +169,7 @@ class PantallaInicio(tk.Frame):
     def borrar_perfil(self):
         usuario = self.entry_usuario.get().strip()
         if not usuario: return
-        confirmacion = messagebox.askyesno("Confirmar eliminación", f"¿Estás seguro de que deseas eliminar a '{usuario}'?")
+        confirmacion = messagebox.askyesno("Confirmar eliminación", f "¿Estás seguro de que deseas eliminar a '{usuario}'?")
         if confirmacion:
             if gestor_datos.eliminar_usuario(usuario):
                 messagebox.showinfo("Éxito", f"El usuario '{usuario}' eliminado correctamente.")
@@ -466,6 +468,11 @@ class PantallaStats(tk.Frame):
         usuario = self.controller.usuario_actual
         if usuario:
             self.lbl_titulo.config(text=f"Historial de Sesiones: {usuario}")
+            
+            total_actual = self.controller.respuestas_correctas + self.controller.respuestas_incorrectas
+            pct_actual = (self.controller.respuestas_correctas / total_actual) if total_actual > 0 else 0.0
+            puntaje_str_actual = f"{int(pct_actual * 100)}%"
+            self.tree.insert('', tk.END, values=("(En curso)", "Ahora", self.controller.respuestas_correctas, self.controller.respuestas_incorrectas, puntaje_str_actual))
         else:
             self.lbl_titulo.config(text="Estadísticas Generales")
             
