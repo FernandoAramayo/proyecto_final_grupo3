@@ -4,8 +4,6 @@ import sys
 import select
 import ssd1306
 
-<<<<<<< HEAD
-# Modificación 1: Solo 2 LEDs verdes y 1 LED rojo
 green_leds = [Pin(2, Pin.OUT), Pin(3, Pin.OUT)]
 red_leds = [Pin(5, Pin.OUT)]
 =======
@@ -117,10 +115,6 @@ def correcta():
 
     mostrar_oled("CORRECTO!", "Aciertos: " + str(aciertos), "Premio cada " + str(RECOMPENSA_CADA))
 
-<<<<<<< HEAD
-    # Secuencia para los 2 LEDs verdes
-=======
->>>>>>> ee2bf70f6e38131d98f27d694e30afa4f508a80b
     for _ in range(2):
         for l in green_leds:
             l.value(1)
@@ -246,8 +240,6 @@ while True:
             buffer_serial += char
 
             if len(buffer_serial) > 40:
-<<<<<<< HEAD
                 buffer_serial = ""
-=======
                 buffer_serial = ""
->>>>>>> ee2bf70f6e38131d98f27d694e30afa4f508a80b
+
