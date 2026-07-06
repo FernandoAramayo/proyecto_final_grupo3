@@ -10,6 +10,7 @@ import gestor_datos
 import banco_ejercicios
 import motor_vision  
 from PIL import Image, ImageTk
+import datetime
 
 FUENTE_PIXEL = "Terminal"
 
@@ -132,6 +133,8 @@ class SistemaEducativoApp(tk.Tk):
         total_intentos = self.respuestas_correctas + self.respuestas_incorrectas
         puntaje = (self.respuestas_correctas / total_intentos) if total_intentos > 0 else 0.0
 
+        ahora = datetime.datetime.now() # Capturamos el momento exacto
+
         return {
             'nombre_usuario': self.usuario_actual,
             'respuestas_correctas': self.respuestas_correctas,
@@ -140,7 +143,9 @@ class SistemaEducativoApp(tk.Tk):
             'nivel_modo1': self.progreso[1]['nivel'],
             'pregunta_modo1': self.progreso[1]['pregunta'],
             'nivel_modo2': self.progreso[2]['nivel'],
-            'pregunta_modo2': self.progreso[2]['pregunta']
+            'pregunta_modo2': self.progreso[2]['pregunta'],
+            'fecha': ahora.strftime("%Y-%m-%d"),  # <-- Añadimos fecha
+            'hora': ahora.strftime("%H:%M:%S")    # <-- Añadimos hora
         }
 
     def guardar_progreso_actual(self):
