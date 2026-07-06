@@ -32,6 +32,10 @@ CAMPOS_PROGRESO = [
 ]
 
 
+def normalizar_usuario(nombre):
+    return " ".join(str(nombre).strip().lower().split())
+
+
 def inicializar_csv():
     os.makedirs(CARPETA_DATA, exist_ok=True)
 
@@ -76,7 +80,7 @@ def guardar_progreso(datos):
     inicializar_csv()
 
     ahora = datetime.now()
-    usuario = datos["nombre_usuario"].strip().lower()
+    usuario = normalizar_usuario(datos["nombre_usuario"])
 
     filas = []
 
@@ -97,7 +101,7 @@ def guardar_progreso(datos):
     encontrado = False
 
     for i, fila in enumerate(filas):
-        if fila.get("nombre_usuario", "").strip().lower() == usuario:
+        if normalizar_usuario(fila.get("nombre_usuario", "")) == usuario:
             filas[i] = nueva_fila
             encontrado = True
             break
@@ -114,14 +118,14 @@ def guardar_progreso(datos):
 def cargar_datos_usuario(usuario):
     inicializar_csv()
 
-    usuario_buscar = usuario.strip().lower()
+    usuario_buscar = normalizar_usuario(usuario)
 
     # Primero busca el progreso más reciente
     with open(RUTA_PROGRESO, "r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
 
         for fila in reader:
-            if fila.get("nombre_usuario", "").strip().lower() == usuario_buscar:
+            if normalizar_usuario(fila.get("nombre_usuario", "")) == usuario_buscar:
                 return {
                     "nivel_modo1": int(fila.get("nivel_modo1", 1)),
                     "pregunta_modo1": int(fila.get("pregunta_modo1", 1)),
@@ -136,7 +140,7 @@ def cargar_datos_usuario(usuario):
         reader = csv.DictReader(f)
 
         for fila in reader:
-            if fila.get("nombre_usuario", "").strip().lower() == usuario_buscar:
+            if normalizar_usuario(fila.get("nombre_usuario", "")) == usuario_buscar:
                 ultima = fila
 
     if ultima:
@@ -153,7 +157,7 @@ def cargar_datos_usuario(usuario):
 def eliminar_usuario(usuario):
     inicializar_csv()
 
-    usuario_borrar = usuario.strip().lower()
+    usuario_borrar = normalizar_usuario(usuario)
     eliminado = False
 
     # Eliminar de sesiones
@@ -163,7 +167,7 @@ def eliminar_usuario(usuario):
 
     nuevas_sesiones = [
         fila for fila in sesiones
-        if fila.get("nombre_usuario", "").strip().lower() != usuario_borrar
+        if normalizar_usuario(fila.get("nombre_usuario", "")) != usuario_borrar
     ]
 
     if len(nuevas_sesiones) != len(sesiones):
@@ -181,7 +185,7 @@ def eliminar_usuario(usuario):
 
     nuevos_progresos = [
         fila for fila in progresos
-        if fila.get("nombre_usuario", "").strip().lower() != usuario_borrar
+        if normalizar_usuario(fila.get("nombre_usuario", "")) != usuario_borrar
     ]
 
     if len(nuevos_progresos) != len(progresos):
@@ -197,7 +201,7 @@ def eliminar_usuario(usuario):
 def obtener_sesiones_usuario(usuario):
     inicializar_csv()
 
-    usuario_buscar = usuario.strip().lower()
+    usuario_buscar = normalizar_usuario(usuario)
     sesiones = []
 
     try:
@@ -205,7 +209,7 @@ def obtener_sesiones_usuario(usuario):
             reader = csv.DictReader(f)
 
             for fila in reader:
-                nombre_csv = fila.get("nombre_usuario", "").strip().lower()
+                nombre_csv = normalizar_usuario(fila.get("nombre_usuario", ""))
 
                 if nombre_csv == usuario_buscar:
                     sesiones.append({

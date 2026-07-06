@@ -731,6 +731,14 @@ class PantallaModo(tk.Frame):
         self.modo_actual = None
         self.max_niveles = 5
 
+        # Ajuste de orientación antes de analizar números.
+        # None = sin cambio
+        # 1 = espejo horizontal
+        # 0 = espejo vertical
+        # -1 = volteo horizontal + vertical, equivalente a girar 180 grados
+        # Nota: 360 grados visualmente no cambia nada.
+        self.flip_analisis = -1
+
         self.cap = None
         self.camara_loop = None
         self.imgtk_cam = None
@@ -955,12 +963,20 @@ class PantallaModo(tk.Frame):
 
         self.redibujar_modo()
 
+    def preparar_frame_analisis(self, frame):
+        frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50)
+
+        if self.flip_analisis is not None:
+            frame = cv2.flip(frame, self.flip_analisis)
+
+        return frame
+
     def actualizar_camara(self):
         if self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
 
             if ret:
-                frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50)
+                frame = self.preparar_frame_analisis(frame)
 
                 try:
                     numero_detectado, confianza, estado, frame_debug = motor_vision.leer_pizarra(
@@ -998,6 +1014,8 @@ class PantallaModo(tk.Frame):
         ret, frame = self.cap.read()
         if not ret:
             return
+
+        frame = self.preparar_frame_analisis(frame)
 
         if self.modo_actual == 1:
             nivel = self.controller.progreso[self.modo_actual]['nivel']
@@ -1230,7 +1248,13 @@ class PantallaStats(tk.Frame):
         style.map("StatsBody.Treeview", background=[("selected", "#F6C37A")], foreground=[("selected", "#151515")])
 
         columnas = ("fecha", "hora", "correctas", "incorrectas", "puntaje")
-        self.tree = ttk.Treeview(self.tabla_frame, columns=columnas, show="", height=12, style="StatsBody.Treeview")
+        self.tree = ttk.Treeview(self.tabla_frame, columns=columnas, show="headings", height=12, style="StatsBody.Treeview")
+
+        self.tree.heading("fecha", text="FECHA")
+        self.tree.heading("hora", text="HORA")
+        self.tree.heading("correctas", text="CORRECTAS")
+        self.tree.heading("incorrectas", text="INCORRECTAS")
+        self.tree.heading("puntaje", text="PUNTAJE")
 
         self.tree.column("fecha", width=int(tabla_w * 0.18), anchor="center")
         self.tree.column("hora", width=int(tabla_w * 0.18), anchor="center")
@@ -1269,7 +1293,7 @@ class PantallaStats(tk.Frame):
             except Exception:
                 return "0%"
 
-        # Sesión actual en vivo
+        # Sesión actual en vivo, sin tocar el CSV
         if usuario:
             total_actual = self.controller.respuestas_correctas + self.controller.respuestas_incorrectas
             pct_actual = (self.controller.respuestas_correctas / total_actual) if total_actual > 0 else 0.0
@@ -1287,7 +1311,16 @@ class PantallaStats(tk.Frame):
                 )
             )
 
-        sesiones = gestor_datos.obtener_sesiones_usuario(usuario)
+        try:
+            print("Leyendo historial desde:", gestor_datos.RUTA_SESIONES)
+            sesiones = gestor_datos.obtener_sesiones_usuario(usuario)
+        except Exception as e:
+            self.tree.insert(
+                "",
+                tk.END,
+                values=("Error", "CSV", "-", "-", str(e)[:12])
+            )
+            return
 
         if not sesiones:
             self.tree.insert(
@@ -1297,7 +1330,7 @@ class PantallaStats(tk.Frame):
             )
             return
 
-        # Mostrar más recientes primero
+        # Mostrar las sesiones anteriores más recientes primero
         for sesion in reversed(sesiones):
             self.tree.insert(
                 "",
@@ -1310,6 +1343,7 @@ class PantallaStats(tk.Frame):
                     formatear_puntaje(sesion["puntaje"])
                 )
             )
+
 if __name__ == "__main__":
     app = SistemaEducativoApp()
     app.mainloop()
