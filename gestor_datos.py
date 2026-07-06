@@ -2,7 +2,9 @@ import os
 import csv
 from datetime import datetime
 
-CARPETA_DATA = "data"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CARPETA_DATA = os.path.join(BASE_DIR, "data")
 RUTA_SESIONES = os.path.join(CARPETA_DATA, "sesiones.csv")
 RUTA_PROGRESO = os.path.join(CARPETA_DATA, "progreso_usuarios.csv")
 
@@ -33,12 +35,12 @@ CAMPOS_PROGRESO = [
 def inicializar_csv():
     os.makedirs(CARPETA_DATA, exist_ok=True)
 
-    if not os.path.exists(RUTA_SESIONES):
+    if not os.path.exists(RUTA_SESIONES) or os.path.getsize(RUTA_SESIONES) == 0:
         with open(RUTA_SESIONES, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=CAMPOS_SESIONES)
             writer.writeheader()
 
-    if not os.path.exists(RUTA_PROGRESO):
+    if not os.path.exists(RUTA_PROGRESO) or os.path.getsize(RUTA_PROGRESO) == 0:
         with open(RUTA_PROGRESO, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=CAMPOS_PROGRESO)
             writer.writeheader()
@@ -191,3 +193,30 @@ def eliminar_usuario(usuario):
         writer.writerows(nuevos_progresos)
 
     return eliminado
+
+def obtener_sesiones_usuario(usuario):
+    inicializar_csv()
+
+    usuario_buscar = usuario.strip().lower()
+    sesiones = []
+
+    try:
+        with open(RUTA_SESIONES, "r", newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+
+            for fila in reader:
+                nombre_csv = fila.get("nombre_usuario", "").strip().lower()
+
+                if nombre_csv == usuario_buscar:
+                    sesiones.append({
+                        "fecha": fila.get("fecha", "-"),
+                        "hora": fila.get("hora", "-"),
+                        "respuestas_correctas": fila.get("respuestas_correctas", "0"),
+                        "respuestas_incorrectas": fila.get("respuestas_incorrectas", "0"),
+                        "puntaje": fila.get("puntaje", "0")
+                    })
+
+    except FileNotFoundError:
+        return []
+
+    return sesiones

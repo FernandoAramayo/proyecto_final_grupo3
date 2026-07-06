@@ -1218,49 +1218,72 @@ class PantallaStats(tk.Frame):
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-    def actualizar_stats(self):
-        if self.tree is None:
-            return
+def actualizar_stats(self):
+    if self.tree is None:
+        return
 
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+    for item in self.tree.get_children():
+        self.tree.delete(item)
 
-        usuario = self.controller.usuario_actual
-        
-        # Muestra los datos de la sesión activa en tiempo real sin alterar el CSV
-        if usuario:
-            total_actual = self.controller.respuestas_correctas + self.controller.respuestas_incorrectas
-            pct_actual = (self.controller.respuestas_correctas / total_actual) if total_actual > 0 else 0.0
-            puntaje_str_actual = f"{int(pct_actual * 100)}%"
-            self.tree.insert(
-                "", tk.END, 
-                values=("(En curso)", "Ahora", self.controller.respuestas_correctas, self.controller.respuestas_incorrectas, puntaje_str_actual)
-            )
+    usuario = self.controller.usuario_actual.strip()
 
-        ruta_csv = os.path.join("data", "sesiones.csv")
-
+    def formatear_puntaje(valor):
         try:
-            with open(ruta_csv, mode="r", newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    # Garantiza que sigan apareciendo el resto de filas históricas del usuario filtrado
-                    if not usuario or row.get("nombre_usuario") == usuario:
-                        fecha = row.get("fecha", "-")
-                        hora = row.get("hora", "-")
-                        aciertos = row.get("respuestas_correctas", "0")
-                        fallos = row.get("respuestas_incorrectas", "0")
+            texto = str(valor).strip()
 
-                        try:
-                            puntaje_raw = float(row.get("puntaje", 0))
-                            puntaje_str = f"{int(puntaje_raw * 100)}%"
-                        except ValueError:
-                            puntaje_str = "0%"
+            if texto.endswith("%"):
+                return texto
 
-                        self.tree.insert("", tk.END, values=(fecha, hora, aciertos, fallos, puntaje_str))
-        except FileNotFoundError:
-            pass
+            numero = float(texto)
+
+            if numero <= 1:
+                return f"{int(numero * 100)}%"
+            else:
+                return f"{int(numero)}%"
         except Exception:
-            pass
+            return "0%"
+
+    # Sesión actual en vivo
+    if usuario:
+        total_actual = self.controller.respuestas_correctas + self.controller.respuestas_incorrectas
+        pct_actual = (self.controller.respuestas_correctas / total_actual) if total_actual > 0 else 0.0
+        puntaje_str_actual = f"{int(pct_actual * 100)}%"
+
+        self.tree.insert(
+            "",
+            tk.END,
+            values=(
+                "(En curso)",
+                "Ahora",
+                self.controller.respuestas_correctas,
+                self.controller.respuestas_incorrectas,
+                puntaje_str_actual
+            )
+        )
+
+    sesiones = gestor_datos.obtener_sesiones_usuario(usuario)
+
+    if not sesiones:
+        self.tree.insert(
+            "",
+            tk.END,
+            values=("Sin historial", "-", "0", "0", "0%")
+        )
+        return
+
+    # Mostrar más recientes primero
+    for sesion in reversed(sesiones):
+        self.tree.insert(
+            "",
+            tk.END,
+            values=(
+                sesion["fecha"],
+                sesion["hora"],
+                sesion["respuestas_correctas"],
+                sesion["respuestas_incorrectas"],
+                formatear_puntaje(sesion["puntaje"])
+            )
+        )
 
 if __name__ == "__main__":
     app = SistemaEducativoApp()
