@@ -31,194 +31,78 @@ def ordenar_puntos(puntos):
     puntos_ordenados[3] = puntos[np.argmax(diferencia)]
     return puntos_ordenados
 
-def leer_pizarra(frame, interpreter, input_details, output_details, dibujar=False):
+def leer_pizarra(frame, interpreter, input_details, output_details):
     """
     Procesa el fotograma, aísla la pizarra, encuentra múltiples números,
     los ordena de izquierda a derecha y devuelve la concatenación y confianza.
-
-    Si dibujar=False, devuelve:
-    (numero_entero, confianza_promedio, estado_string)
-
-    Si dibujar=True, devuelve:
-    (numero_entero, confianza_promedio, estado_string, frame_con_bounding_boxes)
+    Retorna: (numero_entero, confianza_promedio, estado_string)
     """
-    frame_debug = frame.copy()
-
     gris = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gris, (5, 5), 0)
     bordes = cv2.Canny(blur, 50, 150)
 
-    contornos, _ = cv2.findContours(
-        bordes.copy(),
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
+    contornos, _ = cv2.findContours(bordes.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contornos = sorted(contornos, key=cv2.contourArea, reverse=True)[:5]
     contorno_pizarra = None
 
     for c in contornos:
         perimetro = cv2.arcLength(c, True)
         aproximacion = cv2.approxPolyDP(c, 0.02 * perimetro, True)
-
         if len(aproximacion) == 4:
             contorno_pizarra = aproximacion
             break
 
     if contorno_pizarra is None:
-        if dibujar:
-            cv2.putText(
-                frame_debug,
-                "No se detecta pizarra",
-                (20, 35),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0, 0, 255),
-                2
-            )
-            return (None, 0.0, "NO_PIZARRA", frame_debug)
-
         return (None, 0.0, "NO_PIZARRA")
-
-    if dibujar:
-        cv2.drawContours(frame_debug, [contorno_pizarra], -1, (255, 0, 0), 3)
 
     puntos_origen = ordenar_puntos(contorno_pizarra)
     ancho, alto = 400, 300
-
-    puntos_destino = np.array(
-        [
-            [0, 0],
-            [ancho - 1, 0],
-            [ancho - 1, alto - 1],
-            [0, alto - 1]
-        ],
-        dtype="float32"
-    )
-
+    puntos_destino = np.array([[0, 0], [ancho - 1, 0], [ancho - 1, alto - 1], [0, alto - 1]], dtype="float32")
     matriz = cv2.getPerspectiveTransform(puntos_origen, puntos_destino)
-    matriz_inversa = cv2.getPerspectiveTransform(puntos_destino, puntos_origen)
     pizarra_plana = cv2.warpPerspective(frame, matriz, (ancho, alto))
 
     gris_pizarra = cv2.cvtColor(pizarra_plana, cv2.COLOR_BGR2GRAY)
     blur_pizarra = cv2.GaussianBlur(gris_pizarra, (5, 5), 0)
-
-    binarizada = cv2.adaptiveThreshold(
-        blur_pizarra,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY_INV,
-        25,
-        15
-    )
-
+    binarizada = cv2.adaptiveThreshold(blur_pizarra, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 15)
+ 
     kernel_dilatacion = np.ones((3, 3), np.uint8)
     dilatada = cv2.dilate(binarizada, kernel_dilatacion, iterations=1)
-
-    kernel_cierre = np.ones((3, 3), np.uint8)
+    kernel_cierre = np.ones((3, 3), np.uint8) 
     trazos_unidos = cv2.morphologyEx(dilatada, cv2.MORPH_CLOSE, kernel_cierre)
 
-    contornos_numeros, _ = cv2.findContours(
-        dilatada,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
+    contornos_numeros, _ = cv2.findContours(dilatada, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
     cajas_validas = []
-
+    
     for c in contornos_numeros:
         x, y, w, h = cv2.boundingRect(c)
         area_caja = w * h
         relacion_aspecto = float(w) / h
-
         if area_caja > 100 and h > 20 and 0.1 <= relacion_aspecto <= 1.5:
             cajas_validas.append((x, y, w, h))
 
     if not cajas_validas:
-        if dibujar:
-            cv2.putText(
-                frame_debug,
-                "Pizarra detectada | Sin numeros",
-                (20, 35),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0, 255, 255),
-                2
-            )
-            return (None, 0.0, "NO_NUMEROS", frame_debug)
-
         return (None, 0.0, "NO_NUMEROS")
 
     cajas_validas = sorted(cajas_validas, key=lambda b: b[0])
-
+    
     numero_str = ""
     suma_confianza = 0.0
 
     for (x, y, w, h) in cajas_validas:
-        roi_numero = trazos_unidos[y:y + h, x:x + w]
+        roi_numero = trazos_unidos[y:y+h, x:x+w]
         input_data = preparar_imagen_mnist(roi_numero)
-
+        
         interpreter.set_tensor(input_details[0]['index'], input_data)
         interpreter.invoke()
-
         prediccion = interpreter.get_tensor(output_details[0]['index'])
-
-        digito = int(np.argmax(prediccion[0]))
-        confianza_digito = float(np.max(prediccion[0]) * 100)
-
+        
+        digito = np.argmax(prediccion[0])
+        confianza_digito = np.max(prediccion[0]) * 100
+        
         numero_str += str(digito)
         suma_confianza += confianza_digito
-
-        if dibujar:
-            puntos_caja = np.array(
-                [
-                    [[x, y]],
-                    [[x + w, y]],
-                    [[x + w, y + h]],
-                    [[x, y + h]]
-                ],
-                dtype="float32"
-            )
-
-            puntos_originales = cv2.perspectiveTransform(
-                puntos_caja,
-                matriz_inversa
-            ).astype(int)
-
-            cv2.polylines(
-                frame_debug,
-                [puntos_originales],
-                True,
-                (0, 255, 0),
-                2
-            )
-
-            px = int(puntos_originales[0][0][0])
-            py = int(puntos_originales[0][0][1])
-
-            cv2.putText(
-                frame_debug,
-                f"{digito} {confianza_digito:.0f}%",
-                (px, max(20, py - 10)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                (0, 255, 0),
-                2
-            )
-
+        
     confianza_promedio = suma_confianza / len(cajas_validas)
-
-    if dibujar:
-        cv2.putText(
-            frame_debug,
-            f"Detectado: {numero_str} | {confianza_promedio:.0f}%",
-            (20, 35),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.8,
-            (0, 255, 255),
-            2
-        )
-
-        return (int(numero_str), confianza_promedio, "EXITO", frame_debug)
-
+    
     return (int(numero_str), confianza_promedio, "EXITO")
