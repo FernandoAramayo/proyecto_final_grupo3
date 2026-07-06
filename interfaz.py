@@ -142,6 +142,7 @@ class SistemaEducativoApp(tk.Tk):
         frame.tkraise()
 
     def cerrar_sesion(self):
+        self.enviar_comando_pico("U")
         if self.usuario_actual:
             total_intentos = self.respuestas_correctas + self.respuestas_incorrectas
             puntaje = (self.respuestas_correctas / total_intentos) if total_intentos > 0 else 0.0
