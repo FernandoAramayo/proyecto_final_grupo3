@@ -133,7 +133,7 @@ class SistemaEducativoApp(tk.Tk):
         if page_name == "PantallaModo" and modo is not None:
             frame.iniciar_modo(modo)
         elif page_name == "PantallaStats":
-         frame.redibujar_stats()
+            frame.redibujar_stats()
             
         if page_name in ["PantallaHome", "PantallaInicio", "PantallaStats"]:
             if "PantallaModo" in self.frames:
@@ -193,7 +193,6 @@ class PantallaInicio(tk.Frame):
 
     def cargar_assets(self):
         ruta_fondo = "assets/fondo_inicio.png"
-
         if os.path.exists(ruta_fondo):
             self.fondo_original = Image.open(ruta_fondo).convert("RGBA")
         else:
@@ -343,7 +342,6 @@ class PantallaInicio(tk.Frame):
 
         if usuario:
             self.controller.usuario_actual = usuario
-
             registro_previo = gestor_datos.cargar_datos_usuario(usuario)
 
             if registro_previo:
@@ -354,7 +352,6 @@ class PantallaInicio(tk.Frame):
 
             self.entry_usuario.delete(0, tk.END)
             self.controller.mostrar_pantalla("PantallaHome")
-
         else:
             messagebox.showwarning("Falta nombre", "¡Por favor escribe tu nombre!")
 
@@ -384,13 +381,11 @@ class PantallaHome(tk.Frame):
 
         self.fondo_original = None
         self.fondo_tk = None
-
         self.lobito_original = None
         self.lobito_tk = None
         self.lobito_ids = []
         self.lobito_abs_x = 0
         self.lobito_abs_y = 0
-
         self.animando = False
         self.lobito_rel_x = 0.15
         self.lobito_rel_y = 0.46
@@ -453,7 +448,6 @@ class PantallaHome(tk.Frame):
             )
 
             self.fondo_tk = ImageTk.PhotoImage(fondo_redimensionado)
-
             self.x_fondo = (w - nuevo_w) // 2
             self.y_fondo = (h - nuevo_h) // 2
             self.nuevo_w = nuevo_w
@@ -465,7 +459,6 @@ class PantallaHome(tk.Frame):
                 image=self.fondo_tk,
                 anchor="nw"
             )
-
         else:
             self.x_fondo = 0
             self.y_fondo = 0
@@ -538,12 +531,10 @@ class PantallaHome(tk.Frame):
 
     def crear_boton_pixel(self, nombre, rel_x, rel_y, rel_w, rel_h, texto, color, borde, comando, tipo="modo"):
         c = self.canvas
-
         escala = min(self.nuevo_w / 1600, self.nuevo_h / 900)
 
         x = self.x_fondo + self.nuevo_w * rel_x
         y = self.y_fondo + self.nuevo_h * rel_y
-
         bw = self.nuevo_w * rel_w
         bh = self.nuevo_h * rel_h
 
@@ -565,10 +556,7 @@ class PantallaHome(tk.Frame):
         )
 
         c.create_rectangle(
-            x1,
-            y1,
-            x2,
-            y2,
+            x1, y1, x2, y2,
             fill=borde,
             outline="#000000",
             width=max(2, int(3 * escala)),
@@ -599,54 +587,24 @@ class PantallaHome(tk.Frame):
         if tipo == "modo":
             tri_x = x1 + 22 * escala
             tri_y = y
-
             c.create_polygon(
-                tri_x - 5 * escala,
-                tri_y - 9 * escala,
-                tri_x - 5 * escala,
-                tri_y + 9 * escala,
-                tri_x + 9 * escala,
-                tri_y,
-                fill="#A5E7FF",
-                outline="white",
+                tri_x - 5 * escala, tri_y - 9 * escala,
+                tri_x - 5 * escala, tri_y + 9 * escala,
+                tri_x + 9 * escala, tri_y,
+                fill="#A5E7FF", outline="white",
                 width=max(1, int(1 * escala)),
                 tags=(tag,)
             )
-
             text_x = x + 10 * escala
             font_size = max(10, int(17 * escala))
-
         else:
-            c.create_polygon(
-                x1 + 13 * escala,
-                y,
-                x1 + 20 * escala,
-                y,
-                x1 + 16 * escala,
-                y + 7 * escala,
-                fill="white",
-                outline="",
-                tags=(tag,)
-            )
-
-            c.create_polygon(
-                x1 + 25 * escala,
-                y,
-                x1 + 32 * escala,
-                y,
-                x1 + 28 * escala,
-                y + 7 * escala,
-                fill="white",
-                outline="",
-                tags=(tag,)
-            )
-
+            c.create_polygon(x1 + 13 * escala, y, x1 + 20 * escala, y, x1 + 16 * escala, y + 7 * escala, fill="white", outline="", tags=(tag,))
+            c.create_polygon(x1 + 25 * escala, y, x1 + 32 * escala, y, x1 + 28 * escala, y + 7 * escala, fill="white", outline="", tags=(tag,))
             text_x = x + 10 * escala
             font_size = max(9, int(17 * escala))
 
         c.create_text(
-            text_x,
-            y,
+            text_x, y,
             text=texto,
             font=self.fuente_pixel(font_size),
             fill="white",
@@ -660,14 +618,11 @@ class PantallaHome(tk.Frame):
 
     def dibujar_lobito(self):
         c = self.canvas
-
         self.lobito_ids.clear()
-
         escala = min(self.nuevo_w / 1600, self.nuevo_h / 900)
 
         x = self.x_fondo + self.nuevo_w * self.lobito_rel_x
         y = self.y_fondo + self.nuevo_h * self.lobito_rel_y
-
         self.lobito_abs_x = x
         self.lobito_abs_y = y
 
@@ -680,41 +635,23 @@ class PantallaHome(tk.Frame):
             except AttributeError:
                 filtro = Image.LANCZOS
 
-            lobito_redimensionado = self.lobito_original.resize(
-                (ancho_lobito, alto_lobito),
-                filtro
-            )
-
+            lobito_redimensionado = self.lobito_original.resize((ancho_lobito, alto_lobito), filtro)
             self.lobito_tk = ImageTk.PhotoImage(lobito_redimensionado)
-
-            img_id = c.create_image(
-                x,
-                y,
-                image=self.lobito_tk,
-                anchor="center",
-                tags=("lobito",)
-            )
-
+            img_id = c.create_image(x, y, image=self.lobito_tk, anchor="center", tags=("lobito",))
             self.lobito_ids.append(img_id)
-
         else:
             fallback_id = c.create_oval(
-                x - 28 * escala,
-                y - 28 * escala,
-                x + 28 * escala,
-                y + 28 * escala,
-                fill="#CFCFCF",
-                outline="#303030",
+                x - 28 * escala, y - 28 * escala,
+                x + 28 * escala, y + 28 * escala,
+                fill="#CFCFCF", outline="#303030",
                 width=max(2, int(3 * escala)),
                 tags=("lobito",)
             )
-
             self.lobito_ids.append(fallback_id)
 
     def mover_lobito_a_modo(self, modo):
         if self.animando:
             return
-
         self.animando = True
 
         if modo == 1:
@@ -725,13 +662,9 @@ class PantallaHome(tk.Frame):
             destino_y = 0.56
 
         self.animar_lobito(
-            inicio_x=self.lobito_rel_x,
-            inicio_y=self.lobito_rel_y,
-            destino_x=destino_x,
-            destino_y=self.lobito_rel_y,
-            paso=0,
-            pasos=28,
-            modo=modo
+            inicio_x=self.lobito_rel_x, inicio_y=self.lobito_rel_y,
+            destino_x=destino_x, destino_y=self.lobito_rel_y,
+            paso=0, pasos=28, modo=modo
         )
 
     def animar_lobito(self, inicio_x, inicio_y, destino_x, destino_y, paso, pasos, modo):
@@ -754,25 +687,13 @@ class PantallaHome(tk.Frame):
         self.lobito_abs_y = y
 
         if paso < pasos:
-            self.after(
-                18,
-                lambda: self.animar_lobito(
-                    inicio_x,
-                    inicio_y,
-                    destino_x,
-                    destino_y,
-                    paso + 1,
-                    pasos,
-                    modo
-                )
-            )
+            self.after(18, lambda: self.animar_lobito(inicio_x, inicio_y, destino_x, destino_y, paso + 1, pasos, modo))
         else:
             self.animando = False
-
             self.lobito_rel_x = destino_x
             self.lobito_rel_y = destino_y
-
             self.controller.mostrar_pantalla("PantallaModo", modo=modo)
+
 class PantallaModo(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#F7D99A")
@@ -785,7 +706,6 @@ class PantallaModo(tk.Frame):
         self.imgtk_cam = None
         self.imgtk_modo2 = None
         self.respuesta_modo2 = 0
-
         self.fondo_original = None
         self.fondo_tk = None
 
@@ -799,56 +719,21 @@ class PantallaModo(tk.Frame):
         self.modo2_w = 800
         self.modo2_h = 230
 
-        self.canvas = tk.Canvas(
-            self,
-            bg="#F7D99A",
-            highlightthickness=0
-        )
+        self.canvas = tk.Canvas(self, bg="#F7D99A", highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
 
         self.cargar_assets()
 
-        self.lbl_info = tk.Label(
-            self.canvas,
-            text="",
-            font=font_pixel(18),
-            bg="#F8E7C2",
-            fg="#2C3E50"
-        )
-
-        self.lbl_pregunta = tk.Label(
-            self.canvas,
-            text="",
-            font=font_pixel(18),
-            bg="#FCE9BD",
-            fg="#2C3E50"
-        )
-
-        self.lbl_ejercicio = tk.Label(
-            self.canvas,
-            text="",
-            font=font_pixel(52),
-            bg="#FFF2C8",
-            fg="#2C3E50"
-        )
-
-        self.lbl_imagen_modo2 = tk.Label(
-            self.canvas,
-            bg="#FFF2C8"
-        )
-
-        self.lbl_camara = tk.Label(
-            self.canvas,
-            bg="black",
-            bd=3,
-            relief="solid"
-        )
+        self.lbl_info = tk.Label(self.canvas, text="", font=font_pixel(18), bg="#F8E7C2", fg="#2C3E50")
+        self.lbl_pregunta = tk.Label(self.canvas, text="", font=font_pixel(18), bg="#FCE9BD", fg="#2C3E50")
+        self.lbl_ejercicio = tk.Label(self.canvas, text="", font=font_pixel(52), bg="#FFF2C8", fg="#2C3E50")
+        self.lbl_imagen_modo2 = tk.Label(self.canvas, bg="#FFF2C8")
+        self.lbl_camara = tk.Label(self.canvas, bg="black", bd=3, relief="solid")
 
         self.canvas.bind("<Configure>", self.redibujar_modo)
 
     def cargar_assets(self):
         ruta_fondo = "assets/fondo_modo.png"
-
         if os.path.exists(ruta_fondo):
             self.fondo_original = Image.open(ruta_fondo).convert("RGBA")
         else:
@@ -876,25 +761,14 @@ class PantallaModo(tk.Frame):
             except AttributeError:
                 filtro = Image.LANCZOS
 
-            fondo_redimensionado = self.fondo_original.resize(
-                (nuevo_w, nuevo_h),
-                filtro
-            )
-
+            fondo_redimensionado = self.fondo_original.resize((nuevo_w, nuevo_h), filtro)
             self.fondo_tk = ImageTk.PhotoImage(fondo_redimensionado)
-
             self.x_fondo = (w - nuevo_w) // 2
             self.y_fondo = (h - nuevo_h) // 2
             self.nuevo_w = nuevo_w
             self.nuevo_h = nuevo_h
 
-            c.create_image(
-                self.x_fondo,
-                self.y_fondo,
-                image=self.fondo_tk,
-                anchor="nw"
-            )
-
+            c.create_image(self.x_fondo, self.y_fondo, image=self.fondo_tk, anchor="nw")
         else:
             self.x_fondo = 0
             self.y_fondo = 0
@@ -902,13 +776,7 @@ class PantallaModo(tk.Frame):
             self.nuevo_h = h
 
             c.create_rectangle(0, 0, w, h, fill="#F7D99A", outline="")
-            c.create_text(
-                w / 2,
-                h / 2,
-                text="Falta assets/fondo_modo.png",
-                font=font_pixel(28),
-                fill="black"
-            )
+            c.create_text(w / 2, h / 2, text="Falta assets/fondo_modo.png", font=font_pixel(28), fill="black")
 
         escala_ui = min(self.nuevo_w / 1672, self.nuevo_h / 941)
 
@@ -931,15 +799,10 @@ class PantallaModo(tk.Frame):
 
         self.crear_boton_canvas(
             nombre="home_modo",
-            rel_x=0.895,
-            rel_y=0.103,
-            rel_w=0.105,
-            rel_h=0.055,
-            texto="HOME",
-            color_texto="#7A4B2A",
+            rel_x=0.895, rel_y=0.103, rel_w=0.105, rel_h=0.055,
+            texto="HOME", color_texto="#7A4B2A",
             comando=lambda: self.controller.mostrar_pantalla("PantallaHome"),
-            escala=escala_ui,
-            tam_fuente=24
+            escala=escala_ui, tam_fuente=24
         )
 
         c.create_text(
@@ -952,67 +815,26 @@ class PantallaModo(tk.Frame):
         )
 
         if self.modo_actual == 1:
-            c.create_text(
-                self.x_fondo + self.nuevo_w * 0.50,
-                self.y_fondo + self.nuevo_h * 0.39,
-                text=self.lbl_ejercicio.cget("text"),
-                font=font_pixel(62 * escala_ui),
-                fill="#2C3E50"
-            )
-
-            c.create_window(
-                self.x_fondo + self.nuevo_w * 0.50,
-                self.y_fondo + self.nuevo_h * 0.61,
-                window=self.lbl_camara,
-                width=self.cam_w,
-                height=self.cam_h
-            )
-
+            c.create_text(self.x_fondo + self.nuevo_w * 0.50, self.y_fondo + self.nuevo_h * 0.39, text=self.lbl_ejercicio.cget("text"), font=font_pixel(62 * escala_ui), fill="#2C3E50")
+            c.create_window(self.x_fondo + self.nuevo_w * 0.50, self.y_fondo + self.nuevo_h * 0.61, window=self.lbl_camara, width=self.cam_w, height=self.cam_h)
         elif self.modo_actual == 2:
-            c.create_window(
-                self.x_fondo + self.nuevo_w * 0.50,
-                self.y_fondo + self.nuevo_h * 0.40,
-                window=self.lbl_imagen_modo2,
-                width=self.modo2_w,
-                height=self.modo2_h
-            )
-
-            c.create_window(
-                self.x_fondo + self.nuevo_w * 0.50,
-                self.y_fondo + self.nuevo_h * 0.66,
-                window=self.lbl_camara,
-                width=self.cam_w,
-                height=self.cam_h
-            )
-
+            c.create_window(self.x_fondo + self.nuevo_w * 0.50, self.y_fondo + self.nuevo_h * 0.40, window=self.lbl_imagen_modo2, width=self.modo2_w, height=self.modo2_h)
+            c.create_window(self.x_fondo + self.nuevo_w * 0.50, self.y_fondo + self.nuevo_h * 0.66, window=self.lbl_camara, width=self.cam_w, height=self.cam_h)
         else:
-            c.create_window(
-                self.x_fondo + self.nuevo_w * 0.50,
-                self.y_fondo + self.nuevo_h * 0.58,
-                window=self.lbl_camara,
-                width=self.cam_w,
-                height=self.cam_h
-            )
+            c.create_window(self.x_fondo + self.nuevo_w * 0.50, self.y_fondo + self.nuevo_h * 0.58, window=self.lbl_camara, width=self.cam_w, height=self.cam_h)
         
         self.crear_boton_canvas(
             nombre="mandar_respuesta",
-            rel_x=0.50,
-            rel_y=0.865,
-            rel_w=0.22,
-            rel_h=0.060,
-            texto="MANDAR RESPUESTA",
-            color_texto="#7A4B2A",
+            rel_x=0.50, rel_y=0.865, rel_w=0.22, rel_h=0.060,
+            texto="MANDAR RESPUESTA", color_texto="#7A4B2A",
             comando=self.evaluar_respuesta,
-            escala=escala_ui,
-            tam_fuente=20
+            escala=escala_ui, tam_fuente=20
         )
 
     def crear_boton_canvas(self, nombre, rel_x, rel_y, rel_w, rel_h, texto, color_texto, comando, escala, tam_fuente=20):
         c = self.canvas
-
         x = self.x_fondo + self.nuevo_w * rel_x
         y = self.y_fondo + self.nuevo_h * rel_y
-
         bw = self.nuevo_w * rel_w
         bh = self.nuevo_h * rel_h
 
@@ -1022,25 +844,8 @@ class PantallaModo(tk.Frame):
         y2 = y + bh / 2
 
         tag = f"btn_{nombre}"
-
-        c.create_rectangle(
-            x1,
-            y1,
-            x2,
-            y2,
-            fill="",
-            outline="",
-            tags=(tag,)
-        )
-
-        c.create_text(
-            x,
-            y,
-            text=texto,
-            font=font_pixel(max(10, int(tam_fuente * escala))),
-            fill=color_texto,
-            tags=(tag,)
-        )
+        c.create_rectangle(x1, y1, x2, y2, fill="", outline="", tags=(tag,))
+        c.create_text(x, y, text=texto, font=font_pixel(max(10, int(tam_fuente * escala))), fill=color_texto, tags=(tag,))
 
         c.tag_bind(tag, "<Button-1>", lambda event: comando())
         c.tag_bind(tag, "<Enter>", lambda event: c.config(cursor="hand2"))
@@ -1049,10 +854,8 @@ class PantallaModo(tk.Frame):
     def iniciar_modo(self, modo):
         self.modo_actual = modo
         self.max_niveles = 5
-
         self.actualizar_ui_textos()
         self.redibujar_modo()
-
         self.detener_camara()
 
         self.cap = cv2.VideoCapture(0)
@@ -1064,38 +867,15 @@ class PantallaModo(tk.Frame):
         carpeta = f"modo2_nivel{nivel}"
 
         if not os.path.exists(carpeta):
-            self.lbl_imagen_modo2.configure(
-                image="",
-                text=f"Falta carpeta:\n{carpeta}",
-                font=font_adapt(self.controller, 18),
-                width=50,
-                height=5,
-                bg="#FFF2C8",
-                fg="#151515"
-            )
+            self.lbl_imagen_modo2.configure(image="", text=f"Falta carpeta:\n{carpeta}", font=font_adapt(self.controller, 18), width=50, height=5, bg="#FFF2C8", fg="#151515")
             self.respuesta_modo2 = 0
             return
 
-        archivos = [
-            f for f in os.listdir(carpeta)
-            if f.lower().endswith(('.jpg', '.png'))
-        ]
-
-        archivos_disponibles = [
-            f for f in archivos
-            if f not in self.controller.imagenes_vistas
-        ]
+        archivos = [f for f in os.listdir(carpeta) if f.lower().endswith(('.jpg', '.png'))]
+        archivos_disponibles = [f for f in archivos if f not in self.controller.imagenes_vistas]
 
         if not archivos_disponibles:
-            self.lbl_imagen_modo2.configure(
-                image="",
-                text="¡Te quedaste sin imágenes nuevas!",
-                font=font_adapt(self.controller, 18),
-                width=50,
-                height=5,
-                bg="#FFF2C8",
-                fg="#151515"
-            )
+            self.lbl_imagen_modo2.configure(image="", text="¡Te quedaste sin imágenes nuevas!", font=font_adapt(self.controller, 18), width=50, height=5, bg="#FFF2C8", fg="#151515")
             self.respuesta_modo2 = 0
             return
 
@@ -1104,7 +884,7 @@ class PantallaModo(tk.Frame):
 
         try:
             nombre_sin_ext = imagen_elegida.split('.')[0]
-            partes = nombre_sin_ext.split('_')
+            partes = text_sin_ext = nombre_sin_ext.split('_')
             categoria = partes[1]
             self.respuesta_modo2 = int(partes[2])
             self.lbl_pregunta.config(text=f"¿Cuántos {categoria} hay?")
@@ -1128,27 +908,18 @@ class PantallaModo(tk.Frame):
             fondo.paste(img_pil, (x_offset, y_offset))
 
             self.imgtk_modo2 = ImageTk.PhotoImage(image=fondo)
-
-            self.lbl_imagen_modo2.configure(
-                image=self.imgtk_modo2,
-                text="",
-                bg="#FFF2C8"
-            )
+            self.lbl_imagen_modo2.configure(image=self.imgtk_modo2, text="", bg="#FFF2C8")
 
     def actualizar_ui_textos(self):
         nivel = self.controller.progreso[self.modo_actual]['nivel']
         pregunta = self.controller.progreso[self.modo_actual]['pregunta']
 
-        self.lbl_info.config(
-            text=f"Modo {self.modo_actual} | Nivel {nivel}/{self.max_niveles} | Pregunta {pregunta}/3"
-        )
+        self.lbl_info.config(text=f"Modo {self.modo_actual} | Nivel {nivel}/{self.max_niveles} | Pregunta {pregunta}/3")
 
         if self.modo_actual == 1:
             self.lbl_pregunta.config(text="Resuelve la siguiente operación:")
-
             ejercicio = banco_ejercicios.obtener_ejercicio(nivel, pregunta)
             self.lbl_ejercicio.config(text=ejercicio["ecuacion"])
-
         elif self.modo_actual == 2:
             self.cargar_imagen_ejercicio()
 
@@ -1157,14 +928,11 @@ class PantallaModo(tk.Frame):
     def actualizar_camara(self):
         if self.cap and self.cap.isOpened():
             ret, frame = self.cap.read()
-
             if ret:
                 frame = cv2.convertScaleAbs(frame, alpha=1.0, beta=-50)
-
                 frame_recorte = cv2.resize(frame, (self.cam_w, self.cam_h))
                 img_rgb = cv2.cvtColor(frame_recorte, cv2.COLOR_BGR2RGB)
                 img_pil = Image.fromarray(img_rgb)
-
                 self.imgtk_cam = ImageTk.PhotoImage(image=img_pil)
                 self.lbl_camara.configure(image=self.imgtk_cam)
 
@@ -1174,7 +942,6 @@ class PantallaModo(tk.Frame):
         if self.camara_loop:
             self.after_cancel(self.camara_loop)
             self.camara_loop = None
-
         if self.cap:
             self.cap.release()
             self.cap = None
@@ -1184,7 +951,6 @@ class PantallaModo(tk.Frame):
             return
 
         ret, frame = self.cap.read()
-
         if not ret:
             return
 
@@ -1197,61 +963,33 @@ class PantallaModo(tk.Frame):
             respuesta_esperada = self.respuesta_modo2
 
         numero_detectado, confianza, estado = motor_vision.leer_pizarra(
-            frame,
-            self.controller.interpreter,
-            self.controller.input_details,
-            self.controller.output_details
+            frame, self.controller.interpreter, self.controller.input_details, self.controller.output_details
         )
 
         if estado == "NO_PIZARRA":
-            messagebox.showinfo(
-                "Ups!",
-                "No logro ver la pizarra completa. Asegúrate de mostrar las 4 esquinas a la cámara."
-            )
+            messagebox.showinfo("Ups!", "No logro ver la pizarra completa. Asegúrate de mostrar las 4 esquinas a la cámara.")
             return
-
         elif estado == "NO_NUMEROS":
-            messagebox.showinfo(
-                "¡Pizarra en blanco!",
-                "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta."
-            )
+            messagebox.showinfo("¡Pizarra en blanco!", "Veo la pizarra perfectamente, pero no detecto números. Remarca bien tu respuesta.")
             return
 
         if numero_detectado == respuesta_esperada and confianza >= 60.0:
             self.controller.respuestas_correctas += 1
             self.controller.enviar_comando_pico("C")
-
-            messagebox.showinfo(
-                "¡Correcto!",
-                f"¡Excelente! Leí un {numero_detectado}."
-            )
-
+            messagebox.showinfo("¡Correcto!", f"¡Excelente! Leí un {numero_detectado}.")
             self.avanzar_pregunta()
-
         elif numero_detectado == respuesta_esperada and confianza < 60.0:
-            messagebox.showinfo(
-                "Casi...",
-                f"Parece un {numero_detectado}, pero no estoy seguro. ¿Puedes remarcarlo y volver a mandar?"
-            )
-
+            messagebox.showinfo("Casi...", f"Parece un {numero_detectado}, pero no estoy seguro. ¿Puedes remarcarlo y volver a mandar?")
         else:
             if confianza >= 60.0 and numero_detectado < 100:
                 self.controller.respuestas_incorrectas += 1
                 self.controller.enviar_comando_pico("I")
-
-                messagebox.showerror(
-                    "Aún no",
-                    f"Leí un {numero_detectado}. Esa no es la respuesta. ¡Sigue intentando!"
-                )
+                messagebox.showerror("Aún no", f"Leí un {numero_detectado}. Esa no es la respuesta. ¡Sigue intentando!")
             else:
-                messagebox.showinfo(
-                    "Trazo dudoso",
-                    "Veo trazos confusos, ¿podrías borrar y escribir los números más claros?"
-                )
+                messagebox.showinfo("Trazo dudoso", "Veo trazos confusos, ¿podrías borrar y escribir los números más claros?")
 
     def avanzar_pregunta(self):
         pregunta_actual = self.controller.progreso[self.modo_actual]['pregunta']
-
         if pregunta_actual < 3:
             self.controller.progreso[self.modo_actual]['pregunta'] += 1
             self.actualizar_ui_textos()
@@ -1261,7 +999,6 @@ class PantallaModo(tk.Frame):
 
     def mostrar_popup_recompensa(self):
         s = escala_ui(self.controller)
-
         popup = tk.Toplevel(self)
         popup.title("¡Nivel Terminado!")
         popup.geometry(f"{int(650 * s)}x{int(330 * s)}")
@@ -1274,43 +1011,27 @@ class PantallaModo(tk.Frame):
         popup.transient(self.controller)
         popup.grab_set()
 
-        tk.Label(
-            popup,
-            text="¡Bien Hecho!",
-            font=font_pixel(42 * s),
-            fg="#FF9800",
-            bg="#FFF9C4"
-        ).pack(pady=max(25, int(45 * s)))
+        tk.Label(popup, text="¡Bien Hecho!", font=font_pixel(42 * s), fg="#FF9800", bg="#FFF9C4").pack(pady=max(25, int(45 * s)))
 
         nivel_actual = self.controller.progreso[self.modo_actual]['nivel']
         es_ultimo_nivel = nivel_actual >= self.max_niveles
-
         texto_btn = "Finalizar Modo" if es_ultimo_nivel else "Siguiente Nivel"
 
         tk.Button(
-            popup,
-            text=texto_btn,
-            font=font_pixel(22 * s),
-            bg="#4CAF50",
-            fg="white",
-            padx=max(20, int(35 * s)),
-            pady=max(8, int(14 * s)),
+            popup, text=texto_btn, font=font_pixel(22 * s), bg="#4CAF50", fg="white",
+            padx=max(20, int(35 * s)), pady=max(8, int(14 * s)),
             command=lambda: self.avanzar_nivel(popup, es_ultimo_nivel)
         ).pack(pady=max(10, int(18 * s)))
 
     def avanzar_nivel(self, popup, es_ultimo_nivel):
         popup.destroy()
-
         if not es_ultimo_nivel:
             self.controller.progreso[self.modo_actual]['nivel'] += 1
             self.controller.progreso[self.modo_actual]['pregunta'] = 1
-
             self.actualizar_ui_textos()
-
             self.cap = cv2.VideoCapture(0)
             self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.3)
             self.actualizar_camara()
-
         else:
             self.controller.mostrar_pantalla("PantallaHome")
 
@@ -1324,11 +1045,7 @@ class PantallaStats(tk.Frame):
         self.tabla_frame = None
         self.tree = None
 
-        self.canvas = tk.Canvas(
-            self,
-            bg="#F7D99A",
-            highlightthickness=0
-        )
+        self.canvas = tk.Canvas(self, bg="#F7D99A", highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
 
         self.cargar_assets()
@@ -1342,7 +1059,6 @@ class PantallaStats(tk.Frame):
 
     def cargar_assets(self):
         ruta_fondo = "assets/fondo_stats.png"
-
         if os.path.exists(ruta_fondo):
             self.fondo_original = Image.open(ruta_fondo).convert("RGBA")
         else:
@@ -1373,25 +1089,14 @@ class PantallaStats(tk.Frame):
             except AttributeError:
                 filtro = Image.LANCZOS
 
-            fondo_redimensionado = self.fondo_original.resize(
-                (nuevo_w, nuevo_h),
-                filtro
-            )
-
+            fondo_redimensionado = self.fondo_original.resize((nuevo_w, nuevo_h), filtro)
             self.fondo_tk = ImageTk.PhotoImage(fondo_redimensionado)
-
             self.x_fondo = (w - nuevo_w) // 2
             self.y_fondo = (h - nuevo_h) // 2
             self.nuevo_w = nuevo_w
             self.nuevo_h = nuevo_h
 
-            c.create_image(
-                self.x_fondo,
-                self.y_fondo,
-                image=self.fondo_tk,
-                anchor="nw"
-            )
-
+            c.create_image(self.x_fondo, self.y_fondo, image=self.fondo_tk, anchor="nw")
         else:
             self.x_fondo = 0
             self.y_fondo = 0
@@ -1399,16 +1104,9 @@ class PantallaStats(tk.Frame):
             self.nuevo_h = h
 
             c.create_rectangle(0, 0, w, h, fill="#F7D99A", outline="")
-            c.create_text(
-                w / 2,
-                h / 2,
-                text="Falta assets/fondo_stats.png",
-                font=self.fuente_pixel(28),
-                fill="black"
-            )
+            c.create_text(w / 2, h / 2, text="Falta assets/fondo_stats.png", font=self.fuente_pixel(28), fill="black")
 
         escala_ui = min(self.nuevo_w / 1672, self.nuevo_h / 941)
-
         usuario = self.controller.usuario_actual.strip()
 
         if usuario:
@@ -1430,7 +1128,6 @@ class PantallaStats(tk.Frame):
 
     def crear_zona_home(self):
         c = self.canvas
-
         x = self.x_fondo + self.nuevo_w * 0.875
         y = self.y_fondo + self.nuevo_h * 0.095
         bw = self.nuevo_w * 0.15
@@ -1442,14 +1139,7 @@ class PantallaStats(tk.Frame):
         y2 = y + bh / 2
 
         tag = "btn_home_stats"
-
-        c.create_rectangle(
-            x1, y1, x2, y2,
-            fill="",
-            outline="",
-            tags=(tag,)
-        )
-
+        c.create_rectangle(x1, y1, x2, y2, fill="", outline="", tags=(tag,))
         c.tag_bind(tag, "<Button-1>", lambda event: self.controller.mostrar_pantalla("PantallaHome"))
         c.tag_bind(tag, "<Enter>", lambda event: c.config(cursor="hand2"))
         c.tag_bind(tag, "<Leave>", lambda event: c.config(cursor=""))
@@ -1460,20 +1150,8 @@ class PantallaStats(tk.Frame):
         tabla_w = self.nuevo_w * 0.83
         tabla_h = self.nuevo_h * 0.53
 
-        self.tabla_frame = tk.Frame(
-            self.canvas,
-            bg="#FFF2C8",
-            bd=0,
-            highlightthickness=0
-        )
-
-        self.canvas.create_window(
-            tabla_x,
-            tabla_y,
-            window=self.tabla_frame,
-            width=tabla_w,
-            height=tabla_h
-        )
+        self.tabla_frame = tk.Frame(self.canvas, bg="#FFF2C8", bd=0, highlightthickness=0)
+        self.canvas.create_window(tabla_x, tabla_y, window=self.tabla_frame, width=tabla_w, height=tabla_h)
 
         style = ttk.Style()
         style.theme_use("clam")
@@ -1482,28 +1160,14 @@ class PantallaStats(tk.Frame):
             "StatsBody.Treeview",
             font=self.fuente_pixel(max(8, int(14 * escala_ui)), False),
             rowheight=max(22, int(34 * escala_ui)),
-            background="#FFF2C8",
-            fieldbackground="#FFF2C8",
-            foreground="#151515",
-            borderwidth=0,
-            relief="flat"
+            background="#FFF2C8", fieldbackground="#FFF2C8", foreground="#151515",
+            borderwidth=0, relief="flat"
         )
 
-        style.map(
-            "StatsBody.Treeview",
-            background=[("selected", "#F6C37A")],
-            foreground=[("selected", "#151515")]
-        )
+        style.map("StatsBody.Treeview", background=[("selected", "#F6C37A")], foreground=[("selected", "#151515")])
 
         columnas = ("fecha", "hora", "correctas", "incorrectas", "puntaje")
-
-        self.tree = ttk.Treeview(
-            self.tabla_frame,
-            columns=columnas,
-            show="",
-            height=12,
-            style="StatsBody.Treeview"
-        )
+        self.tree = ttk.Treeview(self.tabla_frame, columns=columnas, show="", height=12, style="StatsBody.Treeview")
 
         self.tree.column("fecha", width=int(tabla_w * 0.18), anchor="center")
         self.tree.column("hora", width=int(tabla_w * 0.18), anchor="center")
@@ -1511,11 +1175,7 @@ class PantallaStats(tk.Frame):
         self.tree.column("incorrectas", width=int(tabla_w * 0.18), anchor="center")
         self.tree.column("puntaje", width=int(tabla_w * 0.20), anchor="center")
 
-        scrollbar = ttk.Scrollbar(
-            self.tabla_frame,
-            orient="vertical",
-            command=self.tree.yview
-        )
+        scrollbar = ttk.Scrollbar(self.tabla_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=scrollbar.set)
 
         self.tree.pack(side="left", fill="both", expand=True)
@@ -1529,13 +1189,24 @@ class PantallaStats(tk.Frame):
             self.tree.delete(item)
 
         usuario = self.controller.usuario_actual
+        
+        # Muestra los datos de la sesión activa en tiempo real sin alterar el CSV
+        if usuario:
+            total_actual = self.controller.respuestas_correctas + self.controller.respuestas_incorrectas
+            pct_actual = (self.controller.respuestas_correctas / total_actual) if total_actual > 0 else 0.0
+            puntaje_str_actual = f"{int(pct_actual * 100)}%"
+            self.tree.insert(
+                "", tk.END, 
+                values=("(En curso)", "Ahora", self.controller.respuestas_correctas, self.controller.respuestas_incorrectas, puntaje_str_actual)
+            )
+
         ruta_csv = os.path.join("data", "sesiones.csv")
 
         try:
             with open(ruta_csv, mode="r", newline="", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
-
                 for row in reader:
+                    # Garantiza que sigan apareciendo el resto de filas históricas del usuario filtrado
                     if not usuario or row.get("nombre_usuario") == usuario:
                         fecha = row.get("fecha", "-")
                         hora = row.get("hora", "-")
@@ -1548,16 +1219,12 @@ class PantallaStats(tk.Frame):
                         except ValueError:
                             puntaje_str = "0%"
 
-                        self.tree.insert(
-                            "",
-                            tk.END,
-                            values=(fecha, hora, aciertos, fallos, puntaje_str)
-                        )
-
+                        self.tree.insert("", tk.END, values=(fecha, hora, aciertos, fallos, puntaje_str))
         except FileNotFoundError:
             pass
         except Exception:
             pass
+
 if __name__ == "__main__":
     app = SistemaEducativoApp()
     app.mainloop()
