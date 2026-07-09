@@ -485,14 +485,6 @@ class PantallaHome(tk.Frame):
 
         self.fondo_original = None
         self.fondo_tk = None
-        self.lobito_original = None
-        self.lobito_tk = None
-        self.lobito_ids = []
-        self.lobito_abs_x = 0
-        self.lobito_abs_y = 0
-        self.animando = False
-        self.lobito_rel_x = 0.15
-        self.lobito_rel_y = 0.46
 
         self.canvas = tk.Canvas(
             self,
@@ -512,17 +504,11 @@ class PantallaHome(tk.Frame):
 
     def cargar_assets(self):
         ruta_fondo = "assets/fondo_mapa.png"
-        ruta_lobito = "assets/lobito.png"
 
         if os.path.exists(ruta_fondo):
             self.fondo_original = Image.open(ruta_fondo).convert("RGBA")
         else:
             self.fondo_original = None
-
-        if os.path.exists(ruta_lobito):
-            self.lobito_original = Image.open(ruta_lobito).convert("RGBA")
-        else:
-            self.lobito_original = None
 
     def redibujar_home(self, event=None):
         c = self.canvas
@@ -587,7 +573,7 @@ class PantallaHome(tk.Frame):
             texto="MODO 1\nPIZARRA",
             color="#123333",
             borde="#071616",
-            comando=lambda: self.mover_lobito_a_modo(1),
+            comando=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=1),
             tipo="modo"
         )
 
@@ -600,7 +586,7 @@ class PantallaHome(tk.Frame):
             texto="MODO 2\nCONTEO",
             color="#123333",
             borde="#071616",
-            comando=lambda: self.mover_lobito_a_modo(2),
+            comando=lambda: self.controller.mostrar_pantalla("PantallaModo", modo=2),
             tipo="modo"
         )
 
@@ -629,9 +615,6 @@ class PantallaHome(tk.Frame):
             comando=self.controller.cerrar_sesion,
             tipo="top"
         )
-
-        self.dibujar_lobito()
-        c.tag_raise("lobito")
 
     def crear_boton_pixel(self, nombre, rel_x, rel_y, rel_w, rel_h, texto, color, borde, comando, tipo="modo"):
         c = self.canvas
@@ -719,84 +702,6 @@ class PantallaHome(tk.Frame):
         c.tag_bind(tag, "<Button-1>", lambda event: comando())
         c.tag_bind(tag, "<Enter>", lambda event: c.config(cursor="hand2"))
         c.tag_bind(tag, "<Leave>", lambda event: c.config(cursor=""))
-
-    def dibujar_lobito(self):
-        c = self.canvas
-        self.lobito_ids.clear()
-        escala = min(self.nuevo_w / 1600, self.nuevo_h / 900)
-
-        x = self.x_fondo + self.nuevo_w * self.lobito_rel_x
-        y = self.y_fondo + self.nuevo_h * self.lobito_rel_y
-        self.lobito_abs_x = x
-        self.lobito_abs_y = y
-
-        if self.lobito_original:
-            ancho_lobito = max(45, int(115 * escala))
-            alto_lobito = max(45, int(115 * escala))
-
-            try:
-                filtro = Image.Resampling.LANCZOS
-            except AttributeError:
-                filtro = Image.LANCZOS
-
-            lobito_redimensionado = self.lobito_original.resize((ancho_lobito, alto_lobito), filtro)
-            self.lobito_tk = ImageTk.PhotoImage(lobito_redimensionado)
-            img_id = c.create_image(x, y, image=self.lobito_tk, anchor="center", tags=("lobito",))
-            self.lobito_ids.append(img_id)
-        else:
-            fallback_id = c.create_oval(
-                x - 28 * escala, y - 28 * escala,
-                x + 28 * escala, y + 28 * escala,
-                fill="#CFCFCF", outline="#303030",
-                width=max(2, int(3 * escala)),
-                tags=("lobito",)
-            )
-            self.lobito_ids.append(fallback_id)
-
-    def mover_lobito_a_modo(self, modo):
-        if self.animando:
-            return
-        self.animando = True
-
-        if modo == 1:
-            destino_x = 0.34
-            destino_y = 0.56
-        else:
-            destino_x = 0.61
-            destino_y = 0.56
-
-        self.animar_lobito(
-            inicio_x=self.lobito_rel_x, inicio_y=self.lobito_rel_y,
-            destino_x=destino_x, destino_y=self.lobito_rel_y,
-            paso=0, pasos=28, modo=modo
-        )
-
-    def animar_lobito(self, inicio_x, inicio_y, destino_x, destino_y, paso, pasos, modo):
-        t = paso / pasos
-        t = t * t * (3 - 2 * t)
-
-        nueva_x = inicio_x + (destino_x - inicio_x) * t
-        nueva_y = inicio_y + (destino_y - inicio_y) * t
-
-        x = self.x_fondo + self.nuevo_w * nueva_x
-        y = self.y_fondo + self.nuevo_h * nueva_y
-
-        dx = x - self.lobito_abs_x
-        dy = y - self.lobito_abs_y
-
-        self.canvas.move("lobito", dx, dy)
-        self.canvas.tag_raise("lobito")
-
-        self.lobito_abs_x = x
-        self.lobito_abs_y = y
-
-        if paso < pasos:
-            self.after(18, lambda: self.animar_lobito(inicio_x, inicio_y, destino_x, destino_y, paso + 1, pasos, modo))
-        else:
-            self.animando = False
-            self.lobito_rel_x = destino_x
-            self.lobito_rel_y = destino_y
-            self.controller.mostrar_pantalla("PantallaModo", modo=modo)
 
 class PantallaModo(tk.Frame):
     def __init__(self, parent, controller):
